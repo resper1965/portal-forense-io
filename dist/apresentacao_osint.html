@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0a0a0f">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%230a0a0f'/%3E%3Ctext x='44' y='70' font-family='system-ui' font-size='60' font-weight='bold' fill='%23ffffff' text-anchor='middle'%3En%3C/text%3E%3Ccircle cx='70' cy='70' r='7' fill='%2300ade8'/%3E%3C/svg%3E">
+<title>forense.io | Relatório de Inteligência — Victor Penzo Neto</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<style>
+/* ===== FORENSE.IO DESIGN TOKENS ===== */
+:root {
+  --navy:#0a0a0f;--navy-l:#12121a;--navy-ll:#1e1e2a;--navy-lll:#475569;
+  --white:#F8FAFC;--gray-100:#F1F5F9;--gray-200:#E2E8F0;--gray-300:#CBD5E1;--gray-400:#94A3B8;--gray-500:#64748B;
+  --gold:#00ade8;--gold-d:#0090c0;--gold-l:#33c0ee;--gold-glow:rgba(0,173,232,0.15);
+  --red:#EF4444;--red-s:#DC2626;--orange:#F97316;--green:#22C55E;--purple:#A78BFA;
+  --glass:rgba(30,41,59,0.6);--glass-b:rgba(0,173,232,0.12);
+  --radius:12px;--radius-sm:8px;
+  --shadow:0 4px 24px rgba(0,0,0,0.3),0 1px 3px rgba(0,0,0,0.2);
+  --shadow-gold:0 4px 20px rgba(0,173,232,0.1),0 1px 3px rgba(0,0,0,0.2);
+  --transition:200ms ease-out;
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-snap-type:y mandatory;scroll-behavior:smooth;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;}
+body{font-family:'Montserrat',system-ui,-apple-system,sans-serif;background:var(--navy);color:var(--gray-300);overflow-x:hidden;font-size:15px;line-height:1.6;}
+::selection{background:rgba(0,173,232,0.3);color:var(--white);}
+.mono{font-family:'JetBrains Mono',monospace;font-feature-settings:'liga' 1;}
+.heading{font-family:'Montserrat',sans-serif;}
+@media(prefers-reduced-motion:reduce){*{animation-duration:0.01ms!important;animation-iteration-count:1!important;transition-duration:0.01ms!important;scroll-behavior:auto!important;}}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px;border-radius:4px;}
+
+/* ===== SLIDE ===== */
+.slide{min-height:100vh;width:100%;scroll-snap-align:start;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:56px 72px;position:relative;overflow:hidden;}
+.slide::before{content:'';position:absolute;inset:0;background-image:radial-gradient(circle at 2px 2px,rgba(0,173,232,0.06) 1px,transparent 0);background-size:40px 40px;pointer-events:none;}
+.inner{position:relative;z-index:2;width:100%;max-width:1220px;}
+
+/* ===== GLASS ===== */
+.g{background:var(--glass);backdrop-filter:blur(16px) saturate(1.15);-webkit-backdrop-filter:blur(16px) saturate(1.15);border:1px solid var(--glass-b);border-radius:var(--radius);padding:28px;box-shadow:var(--shadow);transition:border-color var(--transition),box-shadow var(--transition);}
+.g:hover{border-color:rgba(0,173,232,0.2);}
+.g-s{border-radius:var(--radius-sm);padding:20px;}
+.g-xs{border-radius:6px;padding:14px 16px;}
+.bl-red{border-left:3px solid var(--red);}.bl-gold{border-left:3px solid var(--gold);}.bl-green{border-left:3px solid var(--green);}.bl-yellow{border-left:3px solid var(--gold-l);}.bl-purple{border-left:3px solid var(--purple);}.bl-orange{border-left:3px solid var(--orange);}
+.bt-red{border-top:3px solid var(--red);}.bt-gold{border-top:3px solid var(--gold);}.bt-green{border-top:3px solid var(--green);}.bt-purple{border-top:3px solid var(--purple);}
+.glow-red{box-shadow:var(--shadow),0 0 40px rgba(239,68,68,0.06),inset 0 1px 0 rgba(239,68,68,0.08);}
+.glow-gold{box-shadow:var(--shadow-gold),inset 0 1px 0 rgba(0,173,232,0.1);}
+
+/* ===== TYPOGRAPHY ===== */
+h1{font-family:'Montserrat',sans-serif;font-size:clamp(2rem,4vw,3.4rem);font-weight:700;color:var(--white);line-height:1.08;letter-spacing:-0.02em;}
+h2{font-family:'Montserrat',sans-serif;font-size:clamp(1.4rem,2.5vw,2rem);font-weight:600;color:var(--white);margin-bottom:6px;letter-spacing:-0.01em;}
+h3{font-size:0.95rem;font-weight:600;color:var(--gold);margin-bottom:10px;}
+.sub{font-size:0.92rem;color:var(--gray-500);line-height:1.5;margin-top:4px;}
+.label{font-size:0.58rem;font-weight:700;text-transform:uppercase;letter-spacing:0.16em;color:var(--gold);display:inline-block;}
+.stat{font-size:clamp(2.2rem,4vw,3.2rem);font-weight:800;letter-spacing:-0.04em;line-height:1;font-family:'Inter',sans-serif;}
+.stat-sm{font-size:1.8rem;}
+.stat-label{font-size:0.78rem;font-weight:400;color:var(--gray-400);margin-top:6px;}
+.c-red{color:var(--red);}.c-orange{color:var(--orange);}.c-gold{color:var(--gold);}.c-green{color:var(--green);}.c-purple{color:var(--purple);}.c-dim{color:var(--navy-lll);}.c-white{color:var(--white);}
+.fw600{font-weight:600;}.fw700{font-weight:700;}
+
+/* ===== LAYOUT ===== */
+.col{display:flex;flex-direction:column;gap:14px;flex:1;}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;}
+.mt-8{margin-top:8px;}.mt-12{margin-top:12px;}.mt-16{margin-top:16px;}.mt-20{margin-top:20px;}.mt-24{margin-top:24px;}.mt-32{margin-top:32px;}
+.tc{text-align:center;}.fxc{display:flex;align-items:center;justify-content:center;}
+
+/* ===== TABLE ===== */
+table{width:100%;border-collapse:separate;border-spacing:0;font-size:0.82rem;}
+th{text-align:left;padding:8px 12px;color:var(--gold);font-weight:600;font-size:0.66rem;text-transform:uppercase;letter-spacing:0.1em;border-bottom:2px solid var(--navy-ll);}
+td{padding:9px 12px;border-bottom:1px solid rgba(51,65,85,0.5);color:var(--gray-300);transition:background var(--transition);}
+tr:hover td{background:rgba(0,173,232,0.03);}
+tbody tr:last-child td{border-bottom:none;}
+
+/* ===== BADGE ===== */
+.badge{display:inline-flex;align-items:center;padding:2px 10px;border-radius:100px;font-size:0.6rem;font-weight:600;letter-spacing:0.02em;white-space:nowrap;}
+.b-red{background:rgba(239,68,68,0.12);color:var(--red);}.b-green{background:rgba(34,197,94,0.12);color:var(--green);}.b-gold{background:rgba(0,173,232,0.12);color:var(--gold);}.b-yellow{background:rgba(51,192,238,0.15);color:var(--gold-l);}.b-purple{background:rgba(167,139,250,0.12);color:var(--purple);}.b-orange{background:rgba(249,115,22,0.12);color:var(--orange);}
+
+/* ===== HEADER BAR ===== */
+.hdr{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(10,10,15,0.95);backdrop-filter:blur(10px);border-bottom:1px solid rgba(0,173,232,0.1);padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;}
+.hdr-logo{height:28px;width:auto;}
+.hdr-label{font-size:0.6rem;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--gold);opacity:0.8;}
+.hdr-seal{padding:3px 12px;border:1px solid rgba(239,68,68,0.4);border-radius:3px;font-size:0.55rem;font-weight:700;letter-spacing:0.16em;color:var(--red);text-transform:uppercase;}
+.slide-n{position:absolute;bottom:20px;right:28px;font-size:0.66rem;color:var(--navy-lll);font-weight:500;font-family:'JetBrains Mono',monospace;}
+
+/* ===== PROGRESS ===== */
+.prog{width:100%;height:4px;background:var(--navy-l);border-radius:2px;overflow:hidden;}
+.prog-fill{height:100%;border-radius:2px;transition:width 1.2s cubic-bezier(.4,0,.2,1);}
+
+/* ===== AURORA ===== */
+.aurora{position:absolute;inset:0;pointer-events:none;overflow:hidden;}
+.blob{position:absolute;border-radius:50%;filter:blur(120px);opacity:0.08;animation:drift 18s ease-in-out infinite;}
+@keyframes drift{0%,100%{transform:translate(0,0) scale(1);}40%{transform:translate(18px,-10px) scale(1.05);}70%{transform:translate(-10px,6px) scale(0.97);}}
+
+/* ===== ANIMATIONS ===== */
+.fi{opacity:0;transform:translateY(14px);transition:opacity 0.45s ease-out,transform 0.45s ease-out;}
+.fi.v{opacity:1;transform:translateY(0);}
+.sl{opacity:0;transform:translateX(-24px);transition:opacity 0.4s ease-out,transform 0.4s ease-out;}.sl.v{opacity:1;transform:translateX(0);}
+.sr{opacity:0;transform:translateX(24px);transition:opacity 0.4s ease-out,transform 0.4s ease-out;}.sr.v{opacity:1;transform:translateX(0);}
+.stg>*{opacity:0;transform:translateY(10px);transition:opacity 0.3s ease-out,transform 0.3s ease-out;}
+.stg.v>*{opacity:1;transform:translateY(0);}
+.stg.v>*:nth-child(1){transition-delay:40ms;}.stg.v>*:nth-child(2){transition-delay:90ms;}.stg.v>*:nth-child(3){transition-delay:140ms;}.stg.v>*:nth-child(4){transition-delay:190ms;}.stg.v>*:nth-child(5){transition-delay:240ms;}.stg.v>*:nth-child(6){transition-delay:290ms;}.stg.v>*:nth-child(7){transition-delay:340ms;}.stg.v>*:nth-child(8){transition-delay:390ms;}
+
+/* ===== CHARTS ===== */
+#net{width:100%;height:420px;position:relative;}#net svg{width:100%;height:100%;cursor:grab;}#net svg:active{cursor:grabbing;}
+#bars{width:100%;height:280px;}#bars svg{width:100%;height:100%;}
+.zoom-ctrl{position:absolute;top:12px;right:12px;display:flex;flex-direction:column;gap:4px;z-index:5;}
+.zoom-btn{width:30px;height:30px;border-radius:6px;border:1px solid rgba(0,173,232,0.2);background:rgba(10,10,15,0.85);color:var(--gold);font-size:16px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.15s;backdrop-filter:blur(8px);}
+.zoom-btn:hover{background:rgba(0,173,232,0.15);border-color:var(--gold);}
+.zoom-hint{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);font-size:0.6rem;color:var(--navy-lll);pointer-events:none;white-space:nowrap;}
+
+/* ===== HORIZONTAL TIMELINE ===== */
+.htl{position:relative;display:flex;align-items:center;justify-content:space-between;width:100%;padding:0 8px;margin-top:16px;}
+.htl::before{content:'';position:absolute;top:50%;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--gold),var(--red),var(--gold-d));border-radius:1px;transform:translateY(-50%);}
+.htl-i{position:relative;display:flex;flex-direction:column;align-items:center;flex:1;min-width:0;z-index:1;}
+.htl-dot{width:12px;height:12px;border-radius:50%;background:var(--gold);border:2px solid var(--navy);flex-shrink:0;position:relative;z-index:2;transition:box-shadow 0.3s,transform 0.3s;}
+.htl-i:hover .htl-dot{transform:scale(1.3);}
+.htl-i.tr .htl-dot{background:var(--red);box-shadow:0 0 14px rgba(239,68,68,0.4);}
+.htl-i.ev .htl-dot{background:var(--orange);box-shadow:0 0 10px rgba(249,115,22,0.3);}
+.htl-i.q .htl-dot{background:var(--purple);box-shadow:0 0 10px rgba(167,139,250,0.3);}
+.htl-i.wie .htl-dot{background:var(--gold);box-shadow:0 0 10px rgba(0,173,232,0.4);}
+.htl-up,.htl-dn{text-align:center;width:100%;padding:0 2px;}
+.htl-up{padding-bottom:14px;}
+.htl-dn{padding-top:14px;}
+.htl-date{font-size:0.6rem;color:var(--gold);font-weight:700;font-family:'JetBrains Mono',monospace;letter-spacing:0.04em;white-space:nowrap;}
+.htl-txt{font-size:0.7rem;color:var(--gray-300);margin-top:3px;line-height:1.3;}
+.htl-i.big .htl-dot{width:16px;height:16px;background:var(--red);box-shadow:0 0 20px rgba(239,68,68,0.5);animation:pulse-red 2s ease-in-out infinite;}
+@keyframes pulse-red{0%,100%{box-shadow:0 0 12px rgba(239,68,68,0.4);}50%{box-shadow:0 0 24px rgba(239,68,68,0.7);}}
+@media(max-width:1024px){.htl{flex-wrap:wrap;gap:16px;}.htl-i{flex:0 0 18%;}}
+
+/* ===== NAV DOTS ===== */
+.dots{position:fixed;right:16px;top:50%;transform:translateY(-50%);z-index:99;display:flex;flex-direction:column;gap:6px;}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--navy-ll);cursor:pointer;transition:all 0.25s ease;border:none;padding:0;}
+.dot.on{background:var(--gold);transform:scale(1.6);box-shadow:0 0 10px rgba(0,173,232,0.4);}
+.dot:hover{background:var(--gold-d);transform:scale(1.3);}
+
+/* ===== KPI ===== */
+.kpi{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;}
+.kpi-i{background:var(--glass);backdrop-filter:blur(12px);border:1px solid var(--glass-b);border-radius:var(--radius-sm);padding:16px 22px;text-align:center;min-width:130px;box-shadow:var(--shadow);}
+
+/* ===== MARKERS ===== */
+.mark{display:inline-flex;align-items:center;gap:5px;font-size:0.7rem;font-weight:700;letter-spacing:0.04em;margin-bottom:6px;}
+.mark-fact{color:var(--green);}.mark-inf{color:var(--gold-l);}.mark-q{color:var(--purple);}
+.mark::before{content:'';display:inline-block;width:5px;height:5px;border-radius:50%;}
+.mark-fact::before{background:var(--green);}.mark-inf::before{background:var(--gold-l);}.mark-q::before{background:var(--purple);}
+
+/* ===== RESPONSIVE ===== */
+@media(max-width:1024px){.slide{padding:40px 24px;}.grid-2,.grid-3,.grid-4{grid-template-columns:1fr;}}
+@media(max-width:640px){.kpi{flex-direction:column;align-items:stretch;}.hdr{padding:0 12px;}}
+
+/* ===== DIVIDER ===== */
+.divider{width:60px;height:2px;background:linear-gradient(90deg,var(--gold),transparent);margin-top:8px;margin-bottom:0;border-radius:1px;}
+/* ===== PASSWORD GATE ===== */
+#authGate{position:fixed;inset:0;z-index:9999;background:var(--navy);display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .6s ease,visibility .6s ease;}
+#authGate.hidden{opacity:0;visibility:hidden;pointer-events:none;}
+#authGate .gate-logo{width:120px;height:auto;margin-bottom:28px;filter:drop-shadow(0 4px 24px rgba(0,173,232,0.15));}
+#authGate .gate-subtitle{font-family:'Montserrat',sans-serif;font-size:1.1rem;color:var(--gray-400);letter-spacing:0.06em;margin-bottom:36px;text-align:center;}
+#authGate .gate-input-wrap{position:relative;width:320px;margin-bottom:16px;}
+#authGate .gate-input{width:100%;padding:14px 48px 14px 20px;background:var(--navy-l);border:1.5px solid var(--navy-ll);border-radius:var(--radius-sm);color:var(--white);font-family:'Inter',sans-serif;font-size:0.95rem;outline:none;transition:border-color .25s ease,box-shadow .25s ease;}
+#authGate .gate-input::placeholder{color:var(--gray-500);}
+#authGate .gate-input:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(0,173,232,0.15);}
+#authGate .gate-btn{position:absolute;right:6px;top:50%;transform:translateY(-50%);background:var(--gold);border:none;border-radius:6px;width:34px;height:34px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .2s ease;}
+#authGate .gate-btn:hover{background:var(--gold-d);}
+#authGate .gate-btn svg{width:16px;height:16px;fill:var(--navy);}
+#authGate .gate-disclaimer{font-size:0.72rem;color:var(--navy-lll);text-align:center;max-width:340px;line-height:1.5;margin-top:8px;}
+#authGate .gate-error{color:var(--red);font-size:0.78rem;height:20px;margin-bottom:4px;opacity:0;transition:opacity .3s ease;}
+#authGate .gate-error.show{opacity:1;}
+@keyframes gateShake{0%,100%{transform:translateX(0);}15%,45%,75%{transform:translateX(-8px);}30%,60%,90%{transform:translateX(8px);}}
+.gate-shake{animation:gateShake .5s ease;}
+#presentationContent{opacity:0;transition:opacity .5s ease .2s;}
+#presentationContent.visible{opacity:1;}
+.dl-btn{display:inline-flex;align-items:center;gap:8px;padding:10px 24px;background:var(--gold);color:var(--white);border-radius:8px;text-decoration:none;font-size:0.78rem;font-weight:600;letter-spacing:0.02em;transition:all 0.2s;box-shadow:0 2px 12px rgba(0,173,232,0.2);}
+.dl-btn:hover{background:var(--gold-d);box-shadow:0 4px 20px rgba(0,173,232,0.3);transform:translateY(-1px);}
+.dl-btn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+</style>
+</head>
+<body>
+
+<!-- ===== PASSWORD GATE OVERLAY ===== -->
+<div id="authGate">
+  <div style="font-family:'Montserrat',sans-serif;font-weight:500;font-size:2.4rem;color:#fff;margin-bottom:8px;">forense<span style="color:#00ade8;">.</span>io</div>
+  <div style="font-size:0.72rem;color:#64748B;letter-spacing:1.5px;margin-bottom:28px;font-family:'Montserrat',sans-serif;font-weight:500;">a <span style="color:#fff;font-weight:500;">ness<span style="color:#00ade8;">.</span></span> company</div>
+  <div class="gate-subtitle">Relatório de Inteligência · Acesso Restrito</div>
+  <div class="gate-error" id="gateError">Senha incorreta</div>
+  <div class="gate-input-wrap">
+    <input type="password" id="gatePassword" class="gate-input" placeholder="Digite a senha de acesso" autocomplete="off" spellcheck="false">
+    <button class="gate-btn" id="gateSubmit" aria-label="Entrar"><svg viewBox="0 0 24 24"><path d="M5 12h14m-7-7 7 7-7 7" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="stroke:var(--navy)"/></svg></button>
+  </div>
+  <div class="gate-disclaimer">Este relatório é confidencial e de uso exclusivo do destinatário.</div>
+</div>
+
+<div id="presentationContent">
+
+<!-- ===== HEADER BAR ===== -->
+<div class="hdr">
+  <span style="display:flex;align-items:baseline;gap:8px;"><span class="hdr-logo" style="font-family:'Montserrat',sans-serif;font-weight:500;font-size:1.2rem;color:#fff;">forense<span style="color:#00ade8;">.</span>io</span><span style="font-family:'Montserrat',sans-serif;font-size:0.55rem;color:#64748B;font-weight:500;letter-spacing:0.03em;">a <span style="color:#fff;font-weight:500;">ness<span style="color:#00ade8;">.</span></span> company</span></span>
+  <span class="hdr-label">Inteligência Corporativa</span>
+  <span class="hdr-seal">Confidencial</span>
+</div>
+<nav class="dots" id="navDots" aria-label="Navegação dos slides"></nav>
+
+<!-- ===== S1: COVER ===== -->
+<section class="slide" id="s1" style="padding-top:80px;">
+  <div class="aurora">
+    <div class="blob" style="width:600px;height:600px;background:var(--gold);top:-12%;left:-8%;"></div>
+    <div class="blob" style="width:400px;height:400px;background:var(--red);top:60%;right:-10%;animation-delay:6s;opacity:0.04;"></div>
+    <div class="blob" style="width:300px;height:300px;background:var(--purple);top:30%;left:50%;animation-delay:11s;opacity:0.03;"></div>
+  </div>
+  <div class="inner tc">
+    <div class="fi"><span class="label">Relatório de Inteligência · Avaliação de Risco</span></div>
+    <h1 class="fi" style="transition-delay:120ms;margin-top:20px;">Operação Coordenada Contra<br><span class="c-gold">Planova / Valka</span></h1>
+    <div class="divider fi" style="transition-delay:180ms;margin:16px auto 0;"></div>
+    <p class="fi" style="transition-delay:240ms;margin-top:16px;color:var(--gray-400);font-size:1rem;">Alvo: <strong class="c-red">Victor Penzo Neto</strong> · OAB/PR 61.006 · 7 processos · 13 advogados · 6 empresas autoras</p>
+    <div class="fi kpi" style="transition-delay:400ms;margin-top:40px;">
+      <div class="kpi-i"><div class="stat stat-sm c-red" data-count="248" data-suffix="M">0</div><div class="stat-label">Exposição ativa (R$)</div></div>
+      <div class="kpi-i"><div class="stat stat-sm c-orange" data-count="4">0</div><div class="stat-label">Processos ativos</div></div>
+      <div class="kpi-i"><div class="stat stat-sm c-gold" data-count="13">0</div><div class="stat-label">Advogados de ataque</div></div>
+      <div class="kpi-i"><div class="stat stat-sm c-gold" data-count="6">0</div><div class="stat-label">Empresas autoras</div></div>
+      <div class="kpi-i"><div class="stat stat-sm c-purple" data-count="4">0</div><div class="stat-label">Comarcas SP + PR</div></div>
+    </div>
+    <p class="fi mono" style="transition-delay:550ms;margin-top:40px;font-size:0.62rem;color:var(--navy-lll);">17 Jun 2026 · Relatório de Inteligência (121p) · 10 CNPJs consultados · 100 processos analisados · Fontes abertas</p>
+    <p class="fi" style="transition-delay:600ms;margin-top:12px;font-size:0.68rem;color:var(--gold);letter-spacing:0.1em;font-weight:500;">forense.io · <span style="color:var(--gray-500);font-weight:400;">a </span><span style="color:#fff;font-weight:500;">ness<span style="color:#00ade8;">.</span></span><span style="color:var(--gray-500);font-weight:400;"> company</span> · forense.io</p>
+    <div class="fi" style="transition-delay:700ms;margin-top:20px;"><a href="/relatorio.html" download="Forense_Relatorio_Inteligencia_Victor_Penzo.html" class="dl-btn"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Baixar Relatório Completo</a></div>
+  </div>
+  <span class="slide-n">01 / 15</span>
+</section>
+
+<!-- ===== S2: PAINEL DE RISCO ===== -->
+<section class="slide" id="s2">
+  <div class="inner">
+    <span class="label">Visão Executiva</span>
+    <h2 class="mt-8">Painel de Risco Financeiro</h2><div class="divider"></div>
+    <p class="sub mt-8">Exposição financeira consolidada por status processual.</p>
+    <div class="grid-2 mt-24">
+      <div class="g glow-red fi" style="border:1px solid rgba(239,68,68,0.2);">
+        <span class="mark mark-fact">FATO</span>
+        <h3 class="c-red">Exposição Ativa — R$ 248,2M</h3>
+        <div class="stat c-red" id="risco-ativo" style="font-size:2.6rem;">0</div>
+        <div class="stat-label">4 processos em andamento</div>
+        <div class="mt-20" style="display:flex;flex-direction:column;gap:10px;">
+          <div><div style="display:flex;justify-content:space-between;font-size:0.8rem;margin-bottom:4px;"><span>Horebe vs Planova</span><span class="mono c-red fw700">R$ 247,8M</span></div><div class="prog"><div class="prog-fill" style="width:0%;background:var(--red);" data-width="99.8"></div></div></div>
+          <div><div style="display:flex;justify-content:space-between;font-size:0.8rem;margin-bottom:4px;"><span>Transp. São Lucas</span><span class="mono c-orange">R$ 210k</span></div><div class="prog"><div class="prog-fill" style="width:0%;background:var(--orange);" data-width="0.08"></div></div></div>
+          <div><div style="display:flex;justify-content:space-between;font-size:0.8rem;margin-bottom:4px;"><span>F R Moraes</span><span class="mono c-orange">R$ 172k</span></div><div class="prog"><div class="prog-fill" style="width:0%;background:var(--orange);" data-width="0.07"></div></div></div>
+          <div style="display:flex;justify-content:space-between;font-size:0.8rem;"><span>Convicta</span><span class="mono c-dim">Suspenso</span></div>
+        </div>
+      </div>
+      <div class="col fi" style="transition-delay:120ms;">
+        <div class="g g-s bl-green"><span class="mark mark-fact">FATO</span><h3 class="c-green">Encerrados — R$ 593k</h3><p style="font-size:0.82rem;">Bemauto #1: R$ 259k · <span class="badge b-green">Arquivado</span><br>Bemauto #2: R$ 334k · <span class="badge b-green">Arquivado</span><br>PESA Rental · <span class="badge b-green">Extinto</span></p></div>
+        <div class="g g-s bl-gold"><span class="mark mark-inf">INFERÊNCIA</span><h3 class="c-gold">Concentração Crítica</h3><p style="font-size:0.85rem;"><strong class="c-red">99,76%</strong> da exposição concentrada em <strong>1 processo</strong> (Horebe). Risco residual sem ele: R$ 382k.</p></div>
+      </div>
+    </div>
+  </div>
+  <span class="slide-n">02 / 15</span>
+</section>
+
+<!-- ===== S3: PERFIL ===== -->
+<section class="slide" id="s3">
+  <div class="inner">
+    <span class="label">Perfil do Adversário</span>
+    <h2 class="mt-8">Victor Penzo Neto</h2><div class="divider"></div>
+    <p class="sub mt-8">Advogado de Curitiba com atuação serial contra a Planova desde 2021.</p>
+    <div class="grid-2 mt-24">
+      <div class="g fi">
+        <span class="mark mark-fact">FATO · Relatório BigData + BrasilAPI</span>
+        <table><tbody>
+          <tr><td class="c-gold" style="width:110px;">OAB</td><td class="mono fw700">PR 61.006</td></tr>
+          <tr><td class="c-gold">CPF</td><td class="mono">047.044.629-35</td></tr>
+          <tr><td class="c-gold">Idade</td><td>40 anos</td></tr>
+          <tr><td class="c-gold">Celular</td><td class="mono">(41) 99913-0808</td></tr>
+          <tr><td class="c-gold">E-mail</td><td class="mono" style="font-size:0.75rem;">victor@camposefernandes.adv.br</td></tr>
+          <tr><td class="c-gold">Portfólio</td><td>100 processos no total</td></tr>
+          <tr><td class="c-gold">vs Planova</td><td class="c-red fw700">7 processos (7%)</td></tr>
+          <tr><td class="c-gold">Dívida PGFN</td><td class="mono">R$ 13.655 (negociada)</td></tr>
+        </tbody></table>
+      </div>
+      <div class="col fi" style="transition-delay:120ms;">
+        <div class="g g-s bl-red"><span class="mark mark-fact">FATO</span><h3 class="c-red">Trajetória</h3><p style="font-size:0.82rem;"><strong>Jan/2017</strong> — Sócio no Fernandes Lunardi<br><strong>Out/2021</strong> — 1ª ação contra Planova<br><strong>Ago/2022</strong> — Sai do Fernandes Lunardi<br><strong>Fev/2025</strong> — Abre a WIE (WHATSNEGOCIOS)<br><strong>Jul/2025</strong> — Ação de R$ 247,8M (Horebe)</p></div>
+        <div class="g g-s bl-orange"><span class="mark mark-fact">FATO</span><h3 class="c-orange">Antecedente</h3><p style="font-size:0.82rem;">Defensor em ação penal federal — crimes contra ordem tributária (Lei 8.137). 23ª Vara Federal/Curitiba.</p></div>
+        <div class="g g-s bl-gold"><span class="mark mark-fact">FATO</span><h3>Vínculos Digitais</h3><p style="font-size:0.82rem;">camposefernandes.adv.br → redireciona para fernandeslunardi.com.br<br>Artigos no site lealvarasquim.com.br</p></div>
+      </div>
+    </div>
+  </div>
+  <span class="slide-n">03 / 15</span>
+</section>
+
+<!-- ===== S4: REDE DE ATAQUE ===== -->
+<section class="slide" id="s4">
+  <div class="inner">
+    <span class="label">Estrutura de Ataque</span>
+    <h2 class="mt-8">13 Advogados Identificados</h2><div class="divider"></div>
+    <p class="sub mt-8">Rede completa de profissionais nos 7 processos contra a Planova.</p>
+    <div class="grid-2 mt-24">
+      <div class="g fi bt-red">
+        <h3 class="c-red">Núcleo Recorrente (2+ processos)</h3>
+        <table><thead><tr><th>Advogado</th><th>Proc</th><th>Escritório</th></tr></thead><tbody>
+          <tr><td class="c-red fw600">Victor Penzo Neto</td><td class="mono">7</td><td>Autônomo / WIE</td></tr>
+          <tr><td class="c-red fw600">Cesar Hipólito Pereira</td><td class="mono">6</td><td>HBF Advogados (SP)</td></tr>
+          <tr><td class="c-orange fw600">André F. O. Pimentel</td><td class="mono">3</td><td>Mendonça de Barros</td></tr>
+          <tr><td>João M. M. Barboza</td><td class="mono">2</td><td>HBF Advogados (SP)</td></tr>
+          <tr><td>Ana Alice A. Barcelos</td><td class="mono">2</td><td>OAB/MG 171.177</td></tr>
+        </tbody></table>
+      </div>
+      <div class="col fi" style="transition-delay:120ms;">
+        <div class="g g-s bt-gold"><h3>Pontuais (1 processo cada)</h3><div style="display:flex;flex-wrap:wrap;gap:6px;"><span class="badge b-gold">Vitor Soares</span><span class="badge b-gold">Vinícius Consani</span><span class="badge b-gold">Marcos Wengerkiewicz</span><span class="badge b-gold">Márcio Freitas</span><span class="badge b-gold">Danielle Mendes</span><span class="badge b-gold">Carlos Biazetto</span><span class="badge b-gold">Andréa Iwanicki</span><span class="badge b-gold">André Rodrigues</span></div></div>
+        <div class="g g-s bl-red"><span class="mark mark-fact">FATO</span><p style="font-size:0.82rem;"><strong>Barboza é sócio de Cesar</strong> no HBF Advogados. Não é coincidência: o escritório inteiro está engajado.</p></div>
+        <div class="g g-s bl-gold"><span class="mark mark-fact">FATO</span><p style="font-size:0.82rem;"><strong>André Ferrarini</strong> é do <strong>Mendonça de Barros</strong> — escritório premiado, com expertise em Recuperação Judicial.</p></div>
+      </div>
+    </div>
+  </div>
+  <span class="slide-n">04 / 15</span>
+</section>
+
+<!-- ===== S5: GRAFO ===== -->
+<section class="slide" id="s5">
+  <div class="inner">
+    <span class="label">Grafo Interativo</span>
+    <h2 class="mt-8">Mapa de Conexões</h2><div class="divider"></div>
+    <p class="sub mt-8">Arraste os nós e use o scroll para ampliar áreas de interesse.</p>
+    <div class="g fi mt-20" style="padding:16px;position:relative;"><div id="net"><div class="zoom-ctrl"><button class="zoom-btn" id="zIn" title="Ampliar">+</button><button class="zoom-btn" id="zOut" title="Reduzir">−</button><button class="zoom-btn" id="zRst" title="Resetar" style="font-size:11px;">⟲</button></div><div class="zoom-hint">Scroll para zoom · Arraste para mover</div></div></div>
+    <div class="grid-4 mt-12 stg" style="font-size:0.72rem;">
+      <div class="g g-xs fxc" style="gap:8px;"><span style="width:8px;height:8px;border-radius:50%;background:var(--red);flex-shrink:0;"></span>Victor (alvo)</div>
+      <div class="g g-xs fxc" style="gap:8px;"><span style="width:8px;height:8px;border-radius:50%;background:var(--gold);flex-shrink:0;"></span>Empresas autoras</div>
+      <div class="g g-xs fxc" style="gap:8px;"><span style="width:8px;height:8px;border-radius:50%;background:var(--navy-lll);flex-shrink:0;"></span>Planova/Valka</div>
+      <div class="g g-xs fxc" style="gap:8px;"><span style="width:8px;height:8px;border-radius:50%;background:var(--purple);flex-shrink:0;"></span>Escritórios</div>
+    </div>
+  </div>
+  <span class="slide-n">05 / 15</span>
+</section>
+
+<!-- ===== S6: ESTRATÉGIA ===== -->
+<section class="slide" id="s6">
+  <div class="inner">
+    <span class="label">Análise Tática</span>
+    <h2 class="mt-8">Como Victor Ataca</h2><div class="divider"></div>
+    <p class="sub mt-8">Padrões nos tipos de ação, comarcas e alvos corporativos.</p>
+    <div class="grid-3 mt-24 stg">
+      <div class="g g-s bl-red"><span class="mark mark-fact">FATO</span><h3 class="c-red">Tipo de Ação</h3><p style="font-size:0.85rem;"><strong class="c-red">5 de 7</strong> são Execuções de Título Extrajudicial — vão direto na constrição patrimonial.</p></div>
+      <div class="g g-s bl-gold"><span class="mark mark-fact">FATO</span><h3>Geografia</h3><p style="font-size:0.85rem;"><strong>Barueri/SP</strong> — 3<br><strong>São Paulo/SP</strong> — 2<br><strong>Pinhais/PR</strong> — 1<br><strong>Curitiba/PR</strong> — 1</p></div>
+      <div class="g g-s bl-orange"><span class="mark mark-fact">FATO</span><h3 class="c-orange">Alvos</h3><p style="font-size:0.85rem;"><strong>6</strong> contra Planova S.A.<br><span class="mono" style="font-size:0.72rem;">47.383.971/0001-21</span><br><br><strong>1</strong> contra Planova Infra<br><span class="mono" style="font-size:0.72rem;">32.965.375/0001-82</span></p></div>
+    </div>
+    <div class="g bl-gold mt-20 fi"><span class="mark mark-inf">INFERÊNCIA</span><p style="font-size:0.85rem;">Prevalência de execuções extrajudiciais indica <strong>títulos executivos</strong> sólidos (duplicatas, contratos). Documentação forte dos fornecedores dificulta a contestação.</p></div>
+  </div>
+  <span class="slide-n">06 / 15</span>
+</section>
+
+<!-- ===== S7: COMPARTIMENTALIZAÇÃO ===== -->
+<section class="slide" id="s7">
+  <div class="inner">
+    <span class="label">Estrutura Organizacional</span>
+    <h2 class="mt-8">Compartimentalização Total</h2><div class="divider"></div>
+    <p class="sub mt-8">Victor mantém equipes separadas: zero sobreposição entre advocacia regular e casos Planova.</p>
+    <div class="grid-2 mt-24">
+      <div class="g sl bt-gold"><h3 class="c-gold">Time A — Advocacia Regular</h3><table><thead><tr><th>Advogado</th><th>Processos</th><th>Planova</th></tr></thead><tbody><tr><td>Jackson S. de Campos</td><td class="mono">41</td><td class="mono c-green fw700">0</td></tr><tr><td>Fabio F. Leonardo</td><td class="mono">20</td><td class="mono c-green fw700">0</td></tr><tr><td>Wagner B. Lopes</td><td class="mono">16</td><td class="mono c-green fw700">0</td></tr></tbody></table><p class="mt-12 c-dim" style="font-size:0.78rem;">Ex-colegas do Fernandes Lunardi. Nenhum toca nos processos Planova.</p></div>
+      <div class="g sr bt-red"><h3 class="c-red">Time B — Exclusivo Anti-Planova</h3><table><thead><tr><th>Advogado</th><th>Proc</th><th>% Planova</th></tr></thead><tbody><tr><td class="c-red fw600">Cesar Hipólito</td><td class="mono">6</td><td class="mono c-red fw700">100%</td></tr><tr><td class="c-orange fw600">André Ferrarini</td><td class="mono">3</td><td class="mono c-orange fw700">100%</td></tr><tr><td>João M. Barboza</td><td class="mono">2</td><td class="mono c-orange fw700">100%</td></tr><tr><td>Ana Alice Barcelos</td><td class="mono">2</td><td class="mono c-orange fw700">100%</td></tr></tbody></table>
+        <div class="mt-16"><div class="prog"><div class="prog-fill" style="width:0%;background:linear-gradient(90deg,var(--gold),var(--red));" data-width="100"></div></div><p class="mono mt-8 tc c-red" style="font-size:0.72rem;font-weight:700;">100% exclusivos anti-Planova</p></div>
+      </div>
+    </div>
+  </div>
+  <span class="slide-n">07 / 15</span>
+</section>
+
+<!-- ===== S8: HBF ===== -->
+<section class="slide" id="s8">
+  <div class="inner">
+    <span class="label">Inteligência · Escritório Adversário</span>
+    <h2 class="mt-8">HBF Advogados</h2><div class="divider"></div>
+    <p class="sub mt-8">Hipólito, Barboza & Finimundi — braço operacional em São Paulo. +50 anos de tradição.</p>
+    <div class="grid-2 mt-24">
+      <div class="g fi"><span class="mark mark-fact">FATO · hbfadvogados.com.br</span><table><tbody><tr><td class="c-gold" style="width:100px;">Fundação</td><td><strong>2017</strong> — São Paulo</td></tr><tr><td class="c-gold">Endereço</td><td>Av. Ibirapuera 2033, cj 12</td></tr><tr><td class="c-gold">Telefone</td><td class="mono">(11) 5054-6600</td></tr><tr><td class="c-gold">Sócios</td><td><strong class="c-red">Cesar Hipólito</strong>, <strong>João Barboza</strong>, Rodolpho Finimundi</td></tr></tbody></table><div class="mt-16" style="display:flex;flex-wrap:wrap;gap:6px;"><span class="badge b-gold">Contencioso Cível</span><span class="badge b-red">Recuperação Judicial</span><span class="badge b-gold">Societário</span><span class="badge b-gold">Arbitragem</span></div></div>
+      <div class="col fi" style="transition-delay:120ms;">
+        <div class="g g-s bl-red"><span class="mark mark-fact">FATO</span><p style="font-size:0.85rem;"><strong>2 dos 3 sócios</strong> atuam contra a Planova. Cesar (6 proc), Barboza (2 proc). Engajamento institucional.</p></div>
+        <div class="g g-s bl-gold"><span class="mark mark-inf">INFERÊNCIA</span><p style="font-size:0.85rem;">Expertise em <strong>Recuperação Judicial</strong>. Acumular execuções pode ser etapa preparatória para pedido de falência ou RJ forçada.</p></div>
+      </div>
+    </div>
+  </div>
+  <span class="slide-n">08 / 15</span>
+</section>
+
+<!-- ===== S9: EMPRESAS ===== -->
+<section class="slide" id="s9">
+  <div class="inner">
+    <span class="label">Receita Federal · BrasilAPI</span>
+    <h2 class="mt-8">Fornecedores Autores</h2><div class="divider"></div>
+    <p class="sub mt-8">6 empresas reais de 3 estados, sem sócios em comum. Fundadas entre 1988–2013.</p>
+    <div class="grid-3 mt-24 stg">
+      <div class="g g-xs bl-gold"><p class="label">Bemauto Caminhões</p><p class="mono c-gold" style="font-size:0.68rem;margin-top:6px;">BH/MG · 1988</p><p style="font-size:0.78rem;margin-top:4px;">2 proc · <span class="badge b-green">Encerrados</span></p></div>
+      <div class="g g-xs bl-gold"><p class="label">F. R. da Silva Moraes</p><p class="mono c-gold" style="font-size:0.68rem;margin-top:6px;">Campina Lagoa/PR · 2009</p><p style="font-size:0.78rem;margin-top:4px;">R$ 172k · <span class="badge b-yellow">Ativo</span></p></div>
+      <div class="g g-xs bl-gold"><p class="label">Transp. São Lucas</p><p class="mono c-gold" style="font-size:0.68rem;margin-top:6px;">Januária/MG · 2007</p><p style="font-size:0.78rem;margin-top:4px;">R$ 210k · <span class="badge b-yellow">Ativo</span></p></div>
+      <div class="g g-xs bl-gold"><p class="label">Convicta Locações</p><p class="mono c-gold" style="font-size:0.68rem;margin-top:6px;">S.J.Pinhais/PR · 2010</p><p style="font-size:0.78rem;margin-top:4px;">Suspenso · <span class="badge b-purple">N/I</span></p></div>
+      <div class="g g-xs" style="border-left:3px solid var(--red);"><p class="label c-red">Horebe Soluções</p><p class="mono c-red" style="font-size:0.68rem;margin-top:6px;">Betim/MG · 2011</p><p style="font-size:0.78rem;margin-top:4px;"><strong class="c-red">R$ 247,8M</strong> · <span class="badge b-red">ATIVO</span></p></div>
+      <div class="g g-xs bl-gold"><p class="label">PESA / Next Rental</p><p class="mono c-gold" style="font-size:0.68rem;margin-top:6px;">Curitiba/PR · 2013</p><p style="font-size:0.78rem;margin-top:4px;"><span class="badge b-green">Extinto</span></p></div>
+    </div>
+    <div class="g bl-gold mt-20 fi"><span class="mark mark-inf">INFERÊNCIA</span><p style="font-size:0.85rem;">6 empresas de <strong>3 estados</strong> (MG, PR, SP) contrataram o mesmo advogado de Curitiba. Indica <strong>captação ativa</strong>.</p></div>
+  </div>
+  <span class="slide-n">09 / 15</span>
+</section>
+
+<!-- ===== S10: ESCALADA ===== -->
+<section class="slide" id="s10">
+  <div class="inner">
+    <span class="label">Análise de Tendência</span>
+    <h2 class="mt-8">Escalada de Valores</h2><div class="divider"></div>
+    <p class="sub mt-8">Evolução cronológica. Escala logarítmica.</p>
+    <div class="g fi mt-20" style="padding:16px;"><div id="bars"></div></div>
+    <div class="grid-2 mt-16">
+      <div class="g g-s bl-red fi"><span class="mark mark-fact">FATO</span><p style="font-size:0.85rem;">O processo mais recente (Horebe, Jul/2025) é <strong>700x maior</strong> que o segundo maior.</p></div>
+      <div class="g g-s bl-gold fi"><span class="mark mark-inf">INFERÊNCIA</span><p style="font-size:0.85rem;">Escalada de R$ 259k → R$ 247,8M indica busca por <strong>impacto existencial</strong>.</p></div>
+    </div>
+  </div>
+  <span class="slide-n">10 / 15</span>
+</section>
+
+<!-- ===== S11: TIMELINE ===== -->
+<section class="slide" id="s11">
+  <div class="inner">
+    <span class="label">Cronologia Factual</span>
+    <h2 class="mt-8">4 Anos de Operação</h2><div class="divider"></div>
+    <p class="sub mt-8">Out/2021 → Jul/2025. Cada ponto é um fato documentado.</p>
+    <div class="g fi mt-24" style="padding:32px 24px;overflow-x:auto;">
+      <div class="htl stg">
+        <div class="htl-i tr"><div class="htl-up"><span class="htl-date">Out/2021</span><p class="htl-txt"><strong class="c-red">Convicta</strong><br>vs Planova</p></div><div class="htl-dot"></div><div class="htl-dn"></div></div>
+        <div class="htl-i tr"><div class="htl-up"></div><div class="htl-dot"></div><div class="htl-dn"><span class="htl-date">Nov/2021</span><p class="htl-txt"><strong class="c-red">F R Moraes</strong><br>vs Planova</p></div></div>
+        <div class="htl-i tr"><div class="htl-up"><span class="htl-date">Fev/2022</span><p class="htl-txt"><strong class="c-red">Bemauto #1</strong><br>Monitória</p></div><div class="htl-dot"></div><div class="htl-dn"></div></div>
+        <div class="htl-i ev"><div class="htl-up"></div><div class="htl-dot"></div><div class="htl-dn"><span class="htl-date">Ago/2022</span><p class="htl-txt c-orange"><strong>Victor sai</strong><br>do Fernandes</p></div></div>
+        <div class="htl-i tr"><div class="htl-up"><span class="htl-date">Out/2022</span><p class="htl-txt"><strong class="c-red">Bemauto #2</strong><br>Cumpr. Sent.</p></div><div class="htl-dot"></div><div class="htl-dn"></div></div>
+        <div class="htl-i tr"><div class="htl-up"></div><div class="htl-dot"></div><div class="htl-dn"><span class="htl-date">Set/2024</span><p class="htl-txt"><strong class="c-red">São Lucas</strong><br>vs Planova</p></div></div>
+        <div class="htl-i tr"><div class="htl-up"><span class="htl-date">Nov/2024</span><p class="htl-txt"><strong class="c-red">PESA</strong><br>vs Planova Infra</p></div><div class="htl-dot"></div><div class="htl-dn"></div></div>
+        <div class="htl-i wie"><div class="htl-up"></div><div class="htl-dot"></div><div class="htl-dn"><span class="htl-date">Fev/2025</span><p class="htl-txt c-gold"><strong>Victor abre</strong><br>empresa WIE</p></div></div>
+        <div class="htl-i big tr"><div class="htl-up"><span class="htl-date c-red">Jul/2025</span><p class="htl-txt c-red fw700"><strong>Horebe</strong><br>R$ 247,8M</p></div><div class="htl-dot"></div><div class="htl-dn"></div></div>
+        <div class="htl-i q"><div class="htl-up"></div><div class="htl-dot"></div><div class="htl-dn"><span class="htl-date c-purple">???</span><p class="htl-txt c-purple">Planova →<br><strong>Valka</strong></p></div></div>
+      </div>
+    </div>
+    <div class="grid-3 mt-16 stg" style="font-size:0.72rem;">
+      <div class="g g-xs fxc" style="gap:8px;"><span style="width:8px;height:8px;border-radius:50%;background:var(--red);flex-shrink:0;"></span>Ação judicial</div>
+      <div class="g g-xs fxc" style="gap:8px;"><span style="width:8px;height:8px;border-radius:50%;background:var(--orange);flex-shrink:0;"></span>Evento pessoal</div>
+      <div class="g g-xs fxc" style="gap:8px;"><span style="width:8px;height:8px;border-radius:50%;background:var(--purple);flex-shrink:0;"></span>Ponto cego</div>
+    </div>
+  </div>
+  <span class="slide-n">11 / 15</span>
+</section>
+
+<!-- ===== S12: WIE ===== -->
+<section class="slide" id="s12">
+  <div class="inner">
+    <span class="label">Empresa Pessoal</span>
+    <h2 class="mt-8">WIE Inteligência — "WHATSNEGOCIOS"</h2><div class="divider"></div>
+    <p class="sub mt-8">Aberta 5 meses antes do maior processo. Sem atividade digital.</p>
+    <div class="grid-2 mt-24">
+      <div class="g fi"><span class="mark mark-fact">FATO · Receita Federal</span><table><tbody><tr><td class="c-gold" style="width:100px;">CNPJ</td><td class="mono">59.316.426/0001-00</td></tr><tr><td class="c-gold">Abertura</td><td><strong>05/02/2025</strong></td></tr><tr><td class="c-gold">Capital</td><td class="mono">R$ 10.000</td></tr><tr><td class="c-gold">Fantasia</td><td class="mono c-gold fw600">WHATSNEGOCIOS</td></tr><tr><td class="c-gold">CNAE</td><td>6319-4/00 — Internet <span class="badge b-orange">Não é advocacia</span></td></tr><tr><td class="c-gold">Sócio</td><td>Victor Penzo Neto (único)</td></tr></tbody></table></div>
+      <div class="col fi" style="transition-delay:120ms;">
+        <div class="g g-s bl-green"><span class="mark mark-fact">FATO</span><p style="font-size:0.82rem;">CNAE <strong>6319-4/00</strong> = internet. Advocacia = 6911-7/01. <strong>Não é escritório</strong>.</p></div>
+        <div class="g g-s bl-green"><span class="mark mark-fact">FATO</span><p style="font-size:0.82rem;">Zero presença digital. Endereço fiscal compartilhado (5+ empresas).</p></div>
+        <div class="g g-s bl-purple"><span class="mark mark-q">SEM RESPOSTA</span><p style="font-size:0.82rem;">Propósito da WIE permanece desconhecido. Sem evidência direta.</p></div>
+      </div>
+    </div>
+  </div>
+  <span class="slide-n">12 / 15</span>
+</section>
+
+<!-- ===== S13: PONTO CEGO ===== -->
+<section class="slide" id="s13">
+  <div class="inner">
+    <span class="label">Lacuna Crítica</span>
+    <h2 class="mt-8">Planova → Valka</h2><div class="divider"></div>
+    <p class="sub mt-8">A mudança de razão social pode ter criado um ponto cego.</p>
+    <div class="grid-2 mt-24">
+      <div class="g fi bt-gold"><h3>Capturado</h3><p style="font-size:0.85rem;">Relatório por CPF de Victor → 7 processos contra "Planova".</p><p class="mono mt-12" style="font-size:0.72rem;line-height:1.8;color:var(--gold);">PLANOVA PLANEJAMENTO E CONSTRUCOES LTDA<br>PLANOVA PLANEJAMENTO E CONSTRUCOES S A<br>PLANOVA INFRAESTRUTURA LTDA</p></div>
+      <div class="g fi glow-red bt-red" style="transition-delay:120ms;"><h3 class="c-red">Não Captura</h3><p style="font-size:0.85rem;">Empresa agora é <strong>VALKA CONSTRUÇÕES S.A.</strong></p><p class="mt-8 c-red fw700" style="font-size:0.85rem;">"Valka" não aparece nenhuma vez no relatório.</p><div class="g g-xs mt-16" style="background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.15);"><p class="c-red" style="font-size:0.82rem;">Novos processos contra "Valka" não serão capturados por CPF.</p></div><p class="mt-12 c-gold fw600" style="font-size:0.82rem;">Solução: Monitorar pelos CNPJs<br><span class="mono" style="font-size:0.72rem;">47.383.971/0001-21 + 32.965.375/0001-82</span></p></div>
+    </div>
+  </div>
+  <span class="slide-n">13 / 15</span>
+</section>
+
+<!-- ===== S14: FATOS vs INFERÊNCIAS ===== -->
+<section class="slide" id="s14">
+  <div class="inner">
+    <span class="label">Metodologia</span>
+    <h2 class="mt-8">Classificação Epistemológica</h2><div class="divider"></div>
+    <p class="sub mt-8">Cada afirmação deste relatório foi classificada em 3 níveis de certeza. Nenhuma especulação foi admitida.</p>
+    <div class="grid-3 mt-20" style="font-size:0.72rem;margin-bottom:16px;">
+      <div class="g g-xs fxc" style="gap:8px;"><span style="width:8px;height:8px;border-radius:50%;background:var(--green);flex-shrink:0;"></span><strong class="c-green">FATO</strong> — dado verificável em fonte primária</div>
+      <div class="g g-xs fxc" style="gap:8px;"><span style="width:8px;height:8px;border-radius:50%;background:var(--gold);flex-shrink:0;"></span><strong class="c-gold">INFERÊNCIA</strong> — conclusão lógica de fatos combinados</div>
+      <div class="g g-xs fxc" style="gap:8px;"><span style="width:8px;height:8px;border-radius:50%;background:var(--purple);flex-shrink:0;"></span><strong class="c-purple">SEM RESPOSTA</strong> — lacuna que requer investigação</div>
+    </div>
+    <div class="grid-2 mt-8">
+      <div class="g fi bt-green" style="max-height:52vh;overflow-y:auto;">
+        <h3 class="c-green">14 Fatos Comprovados</h3>
+        <div style="font-size:0.76rem;display:flex;flex-direction:column;gap:8px;margin-top:10px;">
+          <div class="g-xs bl-green" style="padding:8px 12px;"><strong>7 processos contra Planova</strong><br><span class="c-dim">Fonte: Relatório BigData Corp (121 p.), cruzado com e-SAJ/TJSP</span></div>
+          <div class="g-xs bl-green" style="padding:8px 12px;"><strong>13 advogados identificados nos 7 processos</strong><br><span class="c-dim">Fonte: SQLite — tabela partes, tipo "Advogado", polo "Ativo"</span></div>
+          <div class="g-xs bl-green" style="padding:8px 12px;"><strong>Cesar Hipólito + João Barboza = sócios do HBF Advogados</strong><br><span class="c-dim">Fonte: hbfadvogados.com.br — página "Quem Somos"</span></div>
+          <div class="g-xs bl-green" style="padding:8px 12px;"><strong>André Ferrarini é do Mendonça de Barros Advogados</strong><br><span class="c-dim">Fonte: OAB/SP + site institucional do escritório</span></div>
+          <div class="g-xs bl-green" style="padding:8px 12px;"><strong>5 de 7 ações são Execuções de Título Extrajudicial</strong><br><span class="c-dim">Fonte: Classe processual no e-SAJ — visam constrição direta</span></div>
+          <div class="g-xs bl-green" style="padding:8px 12px;"><strong>R$ 248,2M em exposição ativa</strong><br><span class="c-dim">Fonte: Valores das petições iniciais dos 4 processos em andamento</span></div>
+          <div class="g-xs bl-green" style="padding:8px 12px;"><strong>6 empresas autoras de 3 estados, sem sócios em comum</strong><br><span class="c-dim">Fonte: Receita Federal via BrasilAPI — CNPJs e QSA verificados</span></div>
+          <div class="g-xs bl-green" style="padding:8px 12px;"><strong>WIE: CNAE 6319-4/00 (internet), não é advocacia</strong><br><span class="c-dim">Fonte: Receita Federal — CNAE primário ≠ 6911-7/01</span></div>
+          <div class="g-xs bl-green" style="padding:8px 12px;"><strong>Planova mudou para Valka Construções S.A.</strong><br><span class="c-dim">Fonte: Alteração contratual na Junta Comercial</span></div>
+          <div class="g-xs bl-green" style="padding:8px 12px;"><strong>Time A (77 processos) tem 0% Planova</strong><br><span class="c-dim">Fonte: SQLite — Jackson, Fabio, Wagner nunca co-assinam com Cesar</span></div>
+        </div>
+      </div>
+      <div class="col fi" style="transition-delay:120ms;">
+        <div class="g g-s bt-gold" style="max-height:30vh;overflow-y:auto;">
+          <h3 class="c-gold">5 Inferências Lógicas</h3>
+          <div style="font-size:0.76rem;display:flex;flex-direction:column;gap:8px;margin-top:10px;">
+            <div class="g-xs bl-gold" style="padding:8px 12px;"><strong>Operação coordenada</strong><br><span class="c-dim">Porque: 6 empresas sem vínculo, 3 estados, mesmo advogado de Curitiba</span></div>
+            <div class="g-xs bl-gold" style="padding:8px 12px;"><strong>Compartimentalização deliberada</strong><br><span class="c-dim">Porque: Time A (regular) e Time B (Planova) têm zero sobreposição</span></div>
+            <div class="g-xs bl-gold" style="padding:8px 12px;"><strong>Captação ativa de credores</strong><br><span class="c-dim">Porque: fornecedores de MG, PR e SP contratam advogado PR</span></div>
+            <div class="g-xs bl-gold" style="padding:8px 12px;"><strong>Engajamento institucional do HBF</strong><br><span class="c-dim">Porque: 2 dos 3 sócios atuam nos processos, não é freelancer</span></div>
+            <div class="g-xs bl-gold" style="padding:8px 12px;"><strong>Escalada intencional (700x)</strong><br><span class="c-dim">Porque: de R$ 259k para R$ 247,8M em 3 anos, maior já no final</span></div>
+          </div>
+        </div>
+        <div class="g g-s bt-purple">
+          <h3 class="c-purple">4 Questões em Aberto</h3>
+          <div style="font-size:0.76rem;display:flex;flex-direction:column;gap:8px;margin-top:10px;">
+            <div class="g-xs bl-purple" style="padding:8px 12px;"><strong class="c-purple">Qual o propósito real da WIE?</strong><br><span class="c-dim">CNAE internet, zero presença, aberta 5 meses antes da Horebe</span></div>
+            <div class="g-xs bl-purple" style="padding:8px 12px;"><strong class="c-purple">Como Victor capta credores em 3 estados?</strong><br><span class="c-dim">Nenhum canal público identificado — método desconhecido</span></div>
+            <div class="g-xs bl-purple" style="padding:8px 12px;"><strong class="c-purple">Existem processos sob o nome "Valka"?</strong><br><span class="c-dim">Relatório por CPF não captura — necessário busca por CNPJ</span></div>
+            <div class="g-xs bl-purple" style="padding:8px 12px;"><strong class="c-purple">Quais os próximos fornecedores a serem captados?</strong><br><span class="c-dim">Mapeamento de credores vulneráveis ainda não realizado</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <span class="slide-n">14 / 15</span>
+</section>
+
+<!-- ===== S15: AÇÕES ===== -->
+<section class="slide" id="s15">
+  <div class="aurora"><div class="blob" style="width:500px;height:500px;background:var(--gold);bottom:-15%;right:-8%;animation-delay:3s;"></div></div>
+  <div class="inner">
+    <span class="label">Recomendações</span>
+    <h2 class="mt-8">Ações Imediatas</h2><div class="divider"></div>
+    <p class="sub mt-8">Priorizadas por urgência e impacto na proteção patrimonial.</p>
+    <div class="grid-3 mt-24 stg">
+      <div class="g g-s bt-red"><span class="badge b-red">Urgente</span><h3 class="c-red mt-12">Defesa Horebe</h3><p style="font-size:0.82rem;">Processo de R$ 247,8M. Verificar legitimidade do título. Barueri, 6ª Vara Cível.</p></div>
+      <div class="g g-s" style="border-top:3px solid var(--orange);"><span class="badge b-orange">Alta</span><h3 class="c-orange mt-12">Monitorar por CNPJ</h3><p style="font-size:0.82rem;">Alertas para CNPJs 47.383.971 e 32.965.375.</p></div>
+      <div class="g g-s" style="border-top:3px solid var(--orange);"><span class="badge b-orange">Alta</span><h3 class="c-orange mt-12">Relatório Cesar</h3><p style="font-size:0.82rem;">BigData pelo CPF de Cesar para mapear rede completa.</p></div>
+      <div class="g g-s bl-gold"><span class="badge b-gold">Média</span><h3 class="mt-12">Investigar WIE</h3><p style="font-size:0.82rem;">NFs emitidas pela WIE (CNPJ 59.316.426).</p></div>
+      <div class="g g-s bl-gold"><span class="badge b-gold">Média</span><h3 class="mt-12">Fornecedores Vulneráveis</h3><p style="font-size:0.82rem;">Mapear credores com débitos pendentes.</p></div>
+      <div class="g g-s bl-gold"><span class="badge b-gold">Média</span><h3 class="mt-12">Diários Oficiais</h3><p style="font-size:0.82rem;">"Valka" + "Victor Penzo" nos DJe SP e PR.</p></div>
+    </div>
+    <div class="grid-2 mt-24 fi">
+      <div class="g g-s bl-gold">
+        <h3>O que é OSINT?</h3>
+        <p style="font-size:0.8rem;">OSINT (<em>Open Source Intelligence</em>) é a coleta e análise de informações obtidas exclusivamente em <strong>fontes públicas e legítimas</strong>. Nenhuma invasão, interceptação ou acesso indevido foi realizado. Todas as informações foram obtidas em conformidade com a legislação brasileira.</p>
+      </div>
+      <div class="g g-s bl-gold">
+        <h3>Fontes Utilizadas</h3>
+        <div style="font-size:0.78rem;display:flex;flex-direction:column;gap:5px;margin-top:4px;">
+          <p>&#10003; <strong>Receita Federal</strong> — dados cadastrais de empresas (CNPJ, CNAE, QSA)</p>
+          <p>&#10003; <strong>Tribunais de Justiça</strong> — processos públicos via e-SAJ (SP/PR)</p>
+          <p>&#10003; <strong>BigData Corp</strong> — relatório de inteligência (121 páginas)</p>
+          <p>&#10003; <strong>Diários Oficiais</strong> — publicações e intimações</p>
+          <p>&#10003; <strong>Registros públicos</strong> — OAB, Junta Comercial, PGFN</p>
+          <p>&#10003; <strong>Web aberta</strong> — sites institucionais, LinkedIn, domínios</p>
+        </div>
+      </div>
+    </div>
+    <div class="g g-xs mt-16 fi" style="background:rgba(0,173,232,0.04);border:1px solid rgba(0,173,232,0.12);text-align:center;padding:20px;">
+      <p style="font-size:0.72rem;color:var(--gray-400);line-height:1.6;">Este relatório é <strong class="c-gold">CONFIDENCIAL</strong> e destinado exclusivamente ao cliente contratante. A reprodução, distribuição ou divulgação total ou parcial sem autorização prévia da forense.io é proibida. As informações foram obtidas em fontes abertas até <strong>17 de junho de 2026</strong> e refletem o cenário nesta data.</p>
+      <div style="margin-top:16px;padding-top:14px;border-top:1px solid rgba(0,173,232,0.1);">
+        <div style="font-family:'Montserrat',sans-serif;font-weight:500;font-size:1.1rem;color:#fff;opacity:0.6;margin-bottom:6px;">forense<span style="color:#00ade8;">.</span>io</div>
+        <p style="font-size:0.6rem;color:var(--gold);letter-spacing:0.12em;font-weight:500;">forense.io · <span style="color:var(--gray-500);font-weight:400;">a </span><span style="color:#fff;font-weight:500;">ness<span style="color:#00ade8;">.</span></span><span style="color:var(--gray-500);font-weight:400;"> company</span> · forense.io</p>
+        <div style="margin-top:12px;"><a href="/relatorio.md" download="Forense_Relatorio_Inteligencia_Victor_Penzo.md" class="dl-btn"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Baixar Relatório Completo</a></div>
+        <p style="font-size:0.56rem;color:var(--navy-lll);margin-top:4px;">contato@forense.io · São Paulo · Curitiba</p>
+      </div>
+    </div>
+  </div>
+  <span class="slide-n">15 / 15</span>
+</section>
+
+<script>
+const S=document.querySelectorAll('.slide'),DC=document.getElementById('navDots');
+S.forEach((s,i)=>{const d=document.createElement('button');d.className='dot';d.title=`Slide ${i+1}`;d.setAttribute('aria-label',`Slide ${i+1}`);d.addEventListener('click',()=>s.scrollIntoView({behavior:'smooth'}));DC.appendChild(d);});
+const D=document.querySelectorAll('.dot');
+function uD(){let c=0;S.forEach((s,i)=>{if(s.getBoundingClientRect().top<=innerHeight/2)c=i;});D.forEach((d,i)=>d.classList.toggle('on',i===c));}
+const ob=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){
+  e.target.querySelectorAll('.fi,.sl,.sr,.stg').forEach((el,i)=>setTimeout(()=>el.classList.add('v'),i*50));
+  e.target.querySelectorAll('.prog-fill').forEach(b=>setTimeout(()=>{b.style.width=b.dataset.width+'%';},350));
+  e.target.querySelectorAll('[data-count]').forEach(el=>aC(el,+el.dataset.count,el.dataset.suffix||''));
+  if(e.target.id==='s2')setTimeout(aR,150);
+  if(e.target.id==='s5')setTimeout(bG,200);
+  if(e.target.id==='s10')setTimeout(bB,200);
+}});},{threshold:0.2});
+S.forEach(s=>ob.observe(s));addEventListener('scroll',uD);uD();
+function aC(el,t,s){if(el.dataset.a)return;el.dataset.a='1';const d=900,st=performance.now();!function step(n){const p=Math.min((n-st)/d,1),e=1-Math.pow(1-p,3);el.textContent=Math.round(t*e)+s;p<1&&requestAnimationFrame(step);}(st);}
+function aR(){const el=document.getElementById('risco-ativo');if(!el||el.dataset.a)return;el.dataset.a='1';const t=248.2,d=1100,st=performance.now();!function step(n){const p=Math.min((n-st)/d,1),e=1-Math.pow(1-p,3);el.textContent='R$ '+(t*e).toFixed(1)+'M';p<1&&requestAnimationFrame(step);}(st);}
+addEventListener('keydown',e=>{let c=0;S.forEach((s,i)=>{const r=s.getBoundingClientRect();if(r.top>=-100&&r.top<=innerHeight/2)c=i;});
+if(['ArrowDown','ArrowRight',' '].includes(e.key)){e.preventDefault();c<S.length-1&&S[c+1].scrollIntoView({behavior:'smooth'});}
+if(['ArrowUp','ArrowLeft'].includes(e.key)){e.preventDefault();c>0&&S[c-1].scrollIntoView({behavior:'smooth'});}});
+
+let gB=false;function bG(){if(gB)return;gB=true;
+const c=document.getElementById('net'),w=c.clientWidth,h=c.clientHeight||400;
+const nodes=[{id:'v',l:'Victor Penzo',g:'t',r:22},{id:'c',l:'Cesar Hipólito',g:'h',r:16},{id:'b',l:'João Barboza',g:'h',r:13},{id:'a',l:'André Ferrarini',g:'m',r:15},{id:'aa',l:'Ana Alice',g:'o',r:11},{id:'p',l:'PLANOVA\n(VALKA)',g:'d',r:20},{id:'pi',l:'Planova\nInfra',g:'d',r:12},{id:'e1',l:'Bemauto',g:'pl',r:11},{id:'e2',l:'F R Moraes',g:'pl',r:11},{id:'e3',l:'São Lucas',g:'pl',r:11},{id:'e4',l:'Convicta',g:'pl',r:11},{id:'e5',l:'Horebe\nR$247M',g:'big',r:16},{id:'e6',l:'PESA',g:'pl',r:11},{id:'hbf',l:'HBF\nAdvogados',g:'of',r:14},{id:'mb',l:'Mendonça\nde Barros',g:'of',r:12}];
+const links=[{source:'v',target:'e1',t:'a'},{source:'v',target:'e2',t:'a'},{source:'v',target:'e3',t:'a'},{source:'v',target:'e4',t:'a'},{source:'v',target:'e5',t:'a'},{source:'v',target:'e6',t:'a'},{source:'v',target:'c',t:'p'},{source:'v',target:'a',t:'p'},{source:'v',target:'aa',t:'p'},{source:'c',target:'hbf',t:'s'},{source:'b',target:'hbf',t:'s'},{source:'a',target:'mb',t:'s'},{source:'e1',target:'p',t:'r'},{source:'e2',target:'p',t:'r'},{source:'e3',target:'p',t:'r'},{source:'e4',target:'p',t:'r'},{source:'e5',target:'p',t:'r'},{source:'e6',target:'pi',t:'r'},{source:'pi',target:'p',t:'c'},{source:'c',target:'p',t:'r'},{source:'b',target:'p',t:'r'},{source:'a',target:'p',t:'r'},{source:'aa',target:'p',t:'r'}];
+const cl={t:'#EF4444',d:'#475569',pl:'#00ade8',h:'#22C55E',m:'#F97316',big:'#EF4444',o:'#A78BFA',of:'#A78BFA'};
+const lc={a:'rgba(0,173,232,0.35)',r:'rgba(239,68,68,0.3)',p:'rgba(34,197,94,0.3)',s:'rgba(167,139,250,0.35)',c:'rgba(71,85,105,0.3)'};
+const svg=d3.select('#net').append('svg').attr('viewBox',`0 0 ${w} ${h}`);
+const gAll=svg.append('g');
+const zm=d3.zoom().scaleExtent([0.5,4]).on('zoom',(e)=>{gAll.attr('transform',e.transform);});
+svg.call(zm);
+document.getElementById('zIn').addEventListener('click',()=>svg.transition().duration(300).call(zm.scaleBy,1.4));
+document.getElementById('zOut').addEventListener('click',()=>svg.transition().duration(300).call(zm.scaleBy,0.7));
+document.getElementById('zRst').addEventListener('click',()=>svg.transition().duration(400).call(zm.transform,d3.zoomIdentity));
+const sim=d3.forceSimulation(nodes).force('link',d3.forceLink(links).id(d=>d.id).distance(80)).force('charge',d3.forceManyBody().strength(-320)).force('center',d3.forceCenter(w/2,h/2)).force('collision',d3.forceCollide().radius(d=>d.r+7));
+const link=gAll.append('g').selectAll('line').data(links).join('line').attr('stroke',d=>lc[d.t]).attr('stroke-width',1.2);
+const node=gAll.append('g').selectAll('g').data(nodes).join('g').call(d3.drag().on('start',(e,d)=>{if(!e.active)sim.alphaTarget(0.3).restart();d.fx=d.x;d.fy=d.y;}).on('drag',(e,d)=>{d.fx=e.x;d.fy=e.y;}).on('end',(e,d)=>{if(!e.active)sim.alphaTarget(0);d.fx=null;d.fy=null;}));
+node.append('circle').attr('r',d=>d.r).attr('fill',d=>cl[d.g]).attr('stroke',d=>d.g==='t'?'#F8FAFC':'none').attr('stroke-width',2).style('opacity',0).style('cursor','grab').transition().duration(500).delay((d,i)=>i*30).style('opacity',0.88);
+node.append('text').text(d=>d.l.split('\n')[0]).attr('text-anchor','middle').attr('dy',d=>d.l.includes('\n')?'-0.3em':'0.35em').attr('fill','#F8FAFC').attr('font-size','7.5px').attr('font-weight','600').attr('font-family','Inter').style('pointer-events','none');
+node.filter(d=>d.l.includes('\n')).append('text').text(d=>d.l.split('\n')[1]).attr('text-anchor','middle').attr('dy','0.85em').attr('fill','#E2E8F0').attr('font-size','6.5px').attr('font-family','Inter').style('pointer-events','none');
+sim.on('tick',()=>{link.attr('x1',d=>d.source.x).attr('y1',d=>d.source.y).attr('x2',d=>d.target.x).attr('y2',d=>d.target.y);node.attr('transform',d=>`translate(${d.x},${d.y})`);});}
+
+let bBB=false;function bB(){if(bBB)return;bBB=true;
+const c=document.getElementById('bars'),w=c.clientWidth,h=c.clientHeight||280;
+const m={top:24,right:24,bottom:44,left:72};
+const data=[{d:'Out/21',l:'Convicta',v:0,s:'Suspenso'},{d:'Nov/21',l:'F R Moraes',v:172662,s:'Ativo'},{d:'Fev/22',l:'Bemauto #1',v:259351,s:'Encerrado'},{d:'Out/22',l:'Bemauto #2',v:334312,s:'Encerrado'},{d:'Set/24',l:'São Lucas',v:210107,s:'Ativo'},{d:'Nov/24',l:'PESA',v:0,s:'Encerrado'},{d:'Jul/25',l:'Horebe',v:247831454,s:'Ativo'}];
+const sc={Ativo:'#EF4444',Encerrado:'#22C55E',Suspenso:'#00ade8'};
+const svg=d3.select('#bars').append('svg').attr('viewBox',`0 0 ${w} ${h}`);
+const x=d3.scaleBand().domain(data.map(d=>d.d)).range([m.left,w-m.right]).padding(0.35);
+const mx=d3.max(data,d=>d.v);
+const y=d3.scaleLog().domain([10000,mx*1.3]).range([h-m.bottom,m.top]).clamp(true);
+svg.append('g').attr('transform',`translate(0,${h-m.bottom})`).call(d3.axisBottom(x).tickSize(0)).selectAll('text').attr('fill','#CBD5E1').attr('font-size','9px').attr('font-family','Inter');
+svg.append('g').attr('transform',`translate(${m.left},0)`).call(d3.axisLeft(y).ticks(4).tickFormat(d=>d>=1e6?(d/1e6).toFixed(0)+'M':d>=1e3?(d/1e3).toFixed(0)+'k':d).tickSize(-w+m.left+m.right)).selectAll('text').attr('fill','#CBD5E1').attr('font-size','8px').attr('font-family','JetBrains Mono');
+svg.selectAll('.domain').attr('stroke','#334155');svg.selectAll('.tick line').attr('stroke','rgba(51,65,85,0.3)');
+svg.selectAll('.bar').data(data).join('rect').attr('x',d=>x(d.d)).attr('width',x.bandwidth()).attr('y',h-m.bottom).attr('height',0).attr('fill',d=>sc[d.s]).attr('rx',5).attr('opacity',0.9).transition().duration(700).delay((d,i)=>i*80).attr('y',d=>d.v>0?y(d.v):h-m.bottom-3).attr('height',d=>d.v>0?h-m.bottom-y(d.v):3);
+svg.selectAll('.bl').data(data).join('text').attr('x',d=>x(d.d)+x.bandwidth()/2).attr('y',d=>d.v>0?y(d.v)-7:h-m.bottom-9).attr('text-anchor','middle').attr('fill','#F8FAFC').attr('font-size','7.5px').attr('font-weight','600').attr('font-family','Inter').text(d=>d.l).style('opacity',0).transition().delay((d,i)=>i*80+350).style('opacity',1);}
+</script>
+
+</div><!-- /presentationContent -->
+
+<script>
+(function(){
+  const PASS='bekaa2026';
+  const KEY='forense_auth';
+  const gate=document.getElementById('authGate');
+  const content=document.getElementById('presentationContent');
+  const input=document.getElementById('gatePassword');
+  const btn=document.getElementById('gateSubmit');
+  const err=document.getElementById('gateError');
+
+  function unlock(){
+    sessionStorage.setItem(KEY,'1');
+    gate.classList.add('hidden');
+    content.classList.add('visible');
+    document.body.style.overflow='';
+  }
+
+  function tryAuth(){
+    if(input.value===PASS){
+      unlock();
+    } else {
+      err.classList.add('show');
+      input.classList.add('gate-shake');
+      input.style.borderColor='var(--red)';
+      setTimeout(()=>{
+        input.classList.remove('gate-shake');
+        input.style.borderColor='';
+      },500);
+      setTimeout(()=>err.classList.remove('show'),2500);
+      input.value='';
+      input.focus();
+    }
+  }
+
+  if(sessionStorage.getItem(KEY)==='1'){
+    gate.style.display='none';
+    content.classList.add('visible');
+  } else {
+    document.body.style.overflow='hidden';
+    input.focus();
+  }
+
+  btn.addEventListener('click',tryAuth);
+  input.addEventListener('keydown',function(e){if(e.key==='Enter')tryAuth();});
+})();
+</script>
+</body>
+</html>

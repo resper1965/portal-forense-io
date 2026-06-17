@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dossiê OSINT — Victor Penzo Neto</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Montserrat:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0a0a0f;
+      --bg-sec: #12121a;
+      --border: rgba(255, 255, 255, 0.08);
+      --text: #e2e8f0;
+      --text-muted: #888896;
+      --accent: #00ade8;
+      --fato: #10b981;
+      --infer: #f59e0b;
+      --espec: #ef4444;
+    }
+    
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      line-height: 1.6;
+      margin: 0;
+      padding: 40px 20px;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      background: var(--bg-sec);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 48px;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+    }
+
+    h1, h2, h3, h4 {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 700;
+      color: #fff;
+      margin-top: 32px;
+      margin-bottom: 16px;
+    }
+
+    h1 {
+      font-size: 2.2rem;
+      border-bottom: 2px solid var(--border);
+      padding-bottom: 16px;
+      margin-top: 0;
+    }
+
+    h2 {
+      font-size: 1.5rem;
+      color: var(--accent);
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 8px;
+    }
+
+    p, li {
+      font-size: 15px;
+      color: var(--text);
+    }
+
+    li {
+      margin-bottom: 8px;
+    }
+
+    blockquote {
+      border-left: 4px solid var(--accent);
+      background: rgba(0, 173, 232, 0.06);
+      margin: 24px 0;
+      padding: 16px 20px;
+      border-radius: 0 12px 12px 0;
+    }
+
+    blockquote p {
+      margin: 0;
+      color: #fff;
+      font-weight: 500;
+    }
+
+    .alert {
+      border-left: 4px solid var(--infer);
+      background: rgba(245, 158, 11, 0.06);
+      margin: 24px 0;
+      padding: 16px 20px;
+      border-radius: 0 12px 12px 0;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      margin-right: 8px;
+      vertical-align: middle;
+    }
+
+    .badge-fato { background: rgba(16, 185, 129, 0.15); color: var(--fato); border: 1px solid rgba(16, 185, 129, 0.3); }
+    .badge-infer { background: rgba(245, 158, 11, 0.15); color: var(--infer); border: 1px solid rgba(245, 158, 11, 0.3); }
+    .badge-espec { background: rgba(239, 68, 68, 0.15); color: var(--espec); border: 1px solid rgba(239, 68, 68, 0.3); }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 24px 0;
+      background: rgba(255,255,255,0.02);
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+
+    th, td {
+      padding: 12px 16px;
+      text-align: left;
+      font-size: 14px;
+    }
+
+    th {
+      background: rgba(255,255,255,0.04);
+      color: #fff;
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 600;
+      border-bottom: 1px solid var(--border);
+    }
+
+    td {
+      border-bottom: 1px solid var(--border);
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    code, pre {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      background: rgba(255,255,255,0.05);
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    pre {
+      padding: 16px;
+      border-radius: 12px;
+      overflow-x: auto;
+      border: 1px solid var(--border);
+    }
+
+    pre code {
+      background: none;
+      padding: 0;
+    }
+
+    hr {
+      border: 0;
+      height: 1px;
+      background: var(--border);
+      margin: 40px 0;
+    }
+
+    a {
+      color: var(--accent);
+      text-decoration: none;
+      border-bottom: 1px dashed var(--accent);
+    }
+
+    a:hover {
+      border-bottom-style: solid;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Dossiê OSINT — Victor Penzo Neto</h1>
+<h2>Atuação Processual Contra Planova (Valka Construções S.A.)</h2>
+<blockquote>
+<p><strong>Data:</strong> 17 de junho de 2026<br />
+<strong>Alvo:</strong> Victor Penzo Neto — OAB/PR 61.006 — CPF 047.044.629-35<br />
+<strong>Metodologia:</strong> Cada afirmação é classificada como <strong>FATO</strong>, <strong>INFERÊNCIA</strong> ou <strong>ESPECULAÇÃO</strong>  </p>
+</blockquote>
+<div class="alert alert-important">> **Convenções deste documento:**  
+> - <span class="badge badge-fato">FATO</span> — Comprovado por fonte documental, API ou registro público  
+> - <span class="badge badge-infer">INFERÊNCIA</span> — Conclusão lógica derivada de dois ou mais fatos  
+> - <span class="badge badge-espec">ESPECULAÇÃO</span> — Hipótese sem evidência direta, claramente rotulada como tal</div>
+
+<hr />
+<h2>1. RESUMO DOS ACHADOS</h2>
+<p><span class="badge badge-fato">FATO</span> Victor Penzo Neto atua como advogado em <strong>7 processos judiciais</strong> contra a Planova (hoje Valka Construções S.A.), representando <strong>6 empresas diferentes</strong>, com valor total declarado de <strong>R$ 248.807.887,87</strong>.<br />
+<em>Fonte: Relatório de inteligência (121 págs) parseado em banco SQLite — 100 processos, 1.024 partes processuais.</em></p>
+<p><span class="badge badge-fato">FATO</span> Em 6 desses 7 processos, o co-advogado é <strong>Cesar Hipólito Pereira</strong> (OAB/SP 206.913), que não aparece em nenhum outro processo de Victor fora da Planova.<br />
+<em>Fonte: Banco SQLite — cruzamento de partes com papel LAWYER.</em></p>
+<p><span class="badge badge-infer">INFERÊNCIA</span> A atuação de Victor contra a Planova é <strong>coordenada e não casual</strong> — um mesmo advogado representando 6 empresas diferentes (de setores e cidades distintos) contra a mesma ré, com o mesmo co-advogado exclusivo, configura um padrão intencional.</p>
+<hr />
+<h2>2. PROCESSOS CONTRA A PLANOVA</h2>
+<h3>2.1 Mapa Completo</h3>
+<p><span class="badge badge-fato">FATO</span> — Todos os dados abaixo foram extraídos do relatório de inteligência:</p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Processo</th>
+<th>Autor</th>
+<th>Classe</th>
+<th>Valor</th>
+<th>Comarca</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>10024086820228260068</td>
+<td>BEMAUTO CAMINHÕES</td>
+<td>Monitória</td>
+<td>R$ 259.351,37</td>
+<td>Barueri/SP</td>
+<td>ARQUIVADO</td>
+</tr>
+<tr>
+<td>2</td>
+<td>11268946320218260100</td>
+<td>F R DA SILVA MORAES ME</td>
+<td>Execução Extrajudicial</td>
+<td>R$ 172.662,59</td>
+<td>São Paulo/SP</td>
+<td>DISTRIBUIDO</td>
+</tr>
+<tr>
+<td>3</td>
+<td>00088186220228260068</td>
+<td>BEMAUTO CAMINHÕES (2º)</td>
+<td>Cumprimento de Sentença</td>
+<td>R$ 334.312,13</td>
+<td>Barueri/SP</td>
+<td>ARQUIVADO</td>
+</tr>
+<tr>
+<td>4</td>
+<td>11488503320248260100</td>
+<td>TRANSPORTES SÃO LUCAS</td>
+<td>Execução Extrajudicial</td>
+<td>R$ 210.107,78</td>
+<td>São Paulo/SP</td>
+<td>REDISTRIBUIDO</td>
+</tr>
+<tr>
+<td>5</td>
+<td>00136271320218160035</td>
+<td>CONVICTA LOCAÇÕES</td>
+<td>Execução Extrajudicial</td>
+<td>N/I</td>
+<td>Pinhais/PR</td>
+<td>SUSPENSO</td>
+</tr>
+<tr>
+<td>6</td>
+<td>10161757120258260068</td>
+<td>HOREBE SOLUÇÕES</td>
+<td>Execução Extrajudicial</td>
+<td>R$ 247.831.454,00</td>
+<td>Barueri/SP</td>
+<td>DISTRIBUIDO</td>
+</tr>
+<tr>
+<td>7</td>
+<td>00387691920248160001</td>
+<td>PESA RENTAL (vs Planova Infra)</td>
+<td>Execução Extrajudicial</td>
+<td>N/I</td>
+<td>Curitiba/PR</td>
+<td>EXTINTO</td>
+</tr>
+</tbody>
+</table>
+<h3>2.2 Posição dentro do portfólio de Victor</h3>
+<p><span class="badge badge-fato">FATO</span> Victor possui 100 processos no total. Dos 10 maiores por valor, <strong>5 são contra a Planova</strong>.<br />
+<em>Fonte: Banco SQLite — ORDER BY valor DESC LIMIT 10.</em></p>
+<p><span class="badge badge-fato">FATO</span> O processo #6 (Horebe, R$ 247,8 milhões) é o <strong>maior processo</strong> de toda a carreira de Victor.<br />
+<em>Fonte: Banco SQLite.</em></p>
+<hr />
+<h2>3. COMPARTIMENTALIZAÇÃO DE EQUIPE</h2>
+<h3>3.1 Dados</h3>
+<p><span class="badge badge-fato">FATO</span> Os advogados que mais atuam com Victor são:</p>
+<table>
+<thead>
+<tr>
+<th>Advogado</th>
+<th>Processos com Victor</th>
+<th>Contra Planova</th>
+<th>% Planova</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Jackson Sondahl de Campos</td>
+<td>41</td>
+<td>0</td>
+<td>0%</td>
+</tr>
+<tr>
+<td>Fabio Fernandes Leonardo</td>
+<td>20</td>
+<td>0</td>
+<td>0%</td>
+</tr>
+<tr>
+<td>Wagner Barone Lopes</td>
+<td>16</td>
+<td>0</td>
+<td>0%</td>
+</tr>
+<tr>
+<td><strong>Cesar Hipólito Pereira</strong></td>
+<td><strong>6</strong></td>
+<td><strong>6</strong></td>
+<td><strong>100%</strong></td>
+</tr>
+</tbody>
+</table>
+<p><em>Fonte: Banco SQLite — cruzamento de partes_processo WHERE papel = LAWYER.</em></p>
+<p><span class="badge badge-fato">FATO</span> Jackson, Fabio e Wagner são ex-sócios ou colegas de faculdade de Victor.<br />
+<em>Fonte: Relatório de inteligência — seção "Pessoas Relacionadas".</em></p>
+<p><span class="badge badge-fato">FATO</span> Nenhum dos três (Jackson, Fabio, Wagner) aparece como parte em qualquer processo que envolve a Planova.<br />
+<em>Fonte: Banco SQLite.</em></p>
+<h3>3.2 Conclusão</h3>
+<p><span class="badge badge-infer">INFERÊNCIA</span> Victor utiliza <strong>equipes separadas</strong> para trabalho regular (Jackson/Fabio/Wagner) e para os casos contra a Planova (Cesar Hipólito). A separação é total — zero sobreposição entre os dois grupos.</p>
+<hr />
+<h2>4. CESAR HIPÓLITO PEREIRA</h2>
+<p><span class="badge badge-fato">FATO</span> OAB/SP 206.913.<br />
+<em>Fonte: Busca web — registros STF e STJ.</em></p>
+<p><span class="badge badge-fato">FATO</span> Sócio do escritório <strong>Hipólito, Barboza &amp; Finimundi Advogados</strong>, Av. Ibirapuera 2033, cj 12, Indianópolis, São Paulo/SP. Tel: (11) 5054-6600.<br />
+<em>Fonte: Busca web — analise.com.</em></p>
+<p><span class="badge badge-fato">FATO</span> Nos dados disponíveis, Cesar aparece em <strong>6 processos</strong> com Victor, todos contra a Planova.<br />
+<em>Fonte: Banco SQLite.</em></p>
+<p><span class="badge badge-infer">INFERÊNCIA</span> Cesar Hipólito é um advogado paulista com escritório próprio e estrutura em SP. Sua atuação exclusivamente em processos contra a Planova sugere que ele foi selecionado especificamente para esses casos, provavelmente por ter competência territorial em Barueri/SP e São Paulo/SP, onde estão concentrados 5 dos 7 processos.</p>
+<hr />
+<h2>5. EMPRESAS AUTORAS</h2>
+<h3>5.1 Dados da Receita Federal</h3>
+<p><span class="badge badge-fato">FATO</span> — Consultados via BrasilAPI em 17/06/2026:</p>
+<table>
+<thead>
+<tr>
+<th>Empresa</th>
+<th>CNPJ</th>
+<th>Fundação</th>
+<th>Capital</th>
+<th>Sede</th>
+<th>CNAE</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>BEMAUTO CAMINHÕES</td>
+<td>24.016.446/0001-72</td>
+<td>1988</td>
+<td>R$ 200.000</td>
+<td>Belo Horizonte/MG</td>
+<td>Comércio de veículos</td>
+</tr>
+<tr>
+<td>F. R. DA SILVA MORAES</td>
+<td>10.887.423/0001-29</td>
+<td>2009</td>
+<td>R$ 800.000</td>
+<td>Campina da Lagoa/PR</td>
+<td>Aluguel de máquinas</td>
+</tr>
+<tr>
+<td>TRANSPORTES SÃO LUCAS</td>
+<td>08.586.780/0001-05</td>
+<td>2007</td>
+<td>R$ 100.000</td>
+<td>Januária/MG</td>
+<td>Locação de automóveis</td>
+</tr>
+<tr>
+<td>CONVICTA LOCAÇÕES</td>
+<td>12.072.549/0001-70</td>
+<td>2010</td>
+<td>R$ 20.000</td>
+<td>S. J. dos Pinhais/PR</td>
+<td>Aluguel de máquinas</td>
+</tr>
+<tr>
+<td>HOREBE SOLUÇÕES</td>
+<td>14.286.623/0001-87</td>
+<td>2011</td>
+<td>R$ 100.000</td>
+<td>Betim/MG</td>
+<td>Fabricação de ferramentas</td>
+</tr>
+<tr>
+<td>NEXT RENTAL (PESA)</td>
+<td>19.266.802/0001-76</td>
+<td>2013</td>
+<td>R$ 217.235.490</td>
+<td>Curitiba/PR</td>
+<td>Aluguel de máquinas</td>
+</tr>
+</tbody>
+</table>
+<h3>5.2 Cruzamentos</h3>
+<p><span class="badge badge-fato">FATO</span> Nenhuma empresa compartilha sócios entre si.<br />
+<span class="badge badge-fato">FATO</span> Nenhuma empresa compartilha endereço.<br />
+<span class="badge badge-fato">FATO</span> Victor e seus familiares não aparecem no QSA de nenhuma dessas empresas.<br />
+<span class="badge badge-fato">FATO</span> Todas as empresas foram fundadas entre 1988 e 2013.<br />
+<em>Fonte: BrasilAPI — cruzamento de QSA e endereços.</em></p>
+<p><span class="badge badge-infer">INFERÊNCIA</span> As empresas são legítimas — não são veículos criados para processar. São fornecedores reais de setores distintos (caminhões, locação, transportes, ferramentas) que provavelmente têm créditos genuínos contra a Planova.</p>
+<p><span class="badge badge-infer">INFERÊNCIA</span> O fato de 6 empresas de 3 estados diferentes (MG, PR, SP) terem contratado o <strong>mesmo advogado de Curitiba</strong> indica que Victor as procurou ativamente, e não o contrário.</p>
+<hr />
+<h2>6. PLANOVA / VALKA</h2>
+<p><span class="badge badge-fato">FATO</span> O CNPJ 47.383.971/0001-21, originalmente registrado como "Planova Planejamento e Construções S/A", agora está registrado como <strong>VALKA CONSTRUÇÕES S.A.</strong><br />
+<em>Fonte: BrasilAPI.</em></p>
+<p><span class="badge badge-fato">FATO</span> Capital social: R$ 265.514.240. Sede: Campos Sales 226, Barueri/SP. Fundação: 22/12/1975. Situação: ATIVA.<br />
+<em>Fonte: BrasilAPI.</em></p>
+<p><span class="badge badge-fato">FATO</span> Planova Infraestrutura Ltda (CNPJ 32.965.375/0001-82) é pessoa jurídica separada, sede em Itaim Bibi/SP, fundação 30/01/2019, capital R$ 28.441.866. Os diretores são parcialmente os mesmos da Valka.<br />
+<em>Fonte: BrasilAPI.</em></p>
+<blockquote>
+<p>[!WARNING]
+<strong>LACUNA:</strong> O relatório de inteligência foi gerado pelo CPF de Victor, não pelo CNPJ da Valka. Processos novos (pós-mudança de nome) movidos contra "Valka Construções" podem não ter sido capturados. A palavra "Valka" não aparece nenhuma vez no relatório.</p>
+</blockquote>
+<hr />
+<h2>7. WIE INTELIGÊNCIA EMPRESARIAL</h2>
+<h3>7.1 Dados Cadastrais</h3>
+<p><span class="badge badge-fato">FATO</span> — Dados da Receita Federal via BrasilAPI:</p>
+<table>
+<thead>
+<tr>
+<th>Campo</th>
+<th>Dado</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Razão Social</td>
+<td>WIE Inteligência Empresarial Ltda</td>
+</tr>
+<tr>
+<td>Nome Fantasia</td>
+<td>WHATSNEGOCIOS</td>
+</tr>
+<tr>
+<td>CNPJ</td>
+<td>59.316.426/0001-00</td>
+</tr>
+<tr>
+<td>Abertura</td>
+<td>05/02/2025</td>
+</tr>
+<tr>
+<td>Capital Social</td>
+<td>R$ 10.000</td>
+</tr>
+<tr>
+<td>Porte</td>
+<td>Micro Empresa</td>
+</tr>
+<tr>
+<td>Sócio Único</td>
+<td>Victor Penzo Neto (Sócio-Administrador)</td>
+</tr>
+<tr>
+<td>CNAE</td>
+<td>6319-4/00 — Portais, provedores de conteúdo e outros serviços de informação na internet</td>
+</tr>
+<tr>
+<td>Endereço</td>
+<td>Av. João Gualberto 1342, Sala 505, 5º andar, Cond. Urban Office e Hotel, Alto da Glória, Curitiba/PR</td>
+</tr>
+<tr>
+<td>Telefone</td>
+<td>(41) 9661-7723</td>
+</tr>
+<tr>
+<td>Situação</td>
+<td>ATIVA</td>
+</tr>
+</tbody>
+</table>
+<h3>7.2 Fatos sobre a WIE</h3>
+<p><span class="badge badge-fato">FATO</span> O CNAE registrado (6319-4/00) <strong>não é de advocacia</strong>. O CNAE de advocacia é 6911-7/01.<br />
+<span class="badge badge-fato">FATO</span> A WIE não possui site, redes sociais, nem qualquer presença digital indexada.<br />
+<span class="badge badge-fato">FATO</span> A Sala 505 do Urban Office abriga pelo menos 5 outras empresas (Gestão Joias, Zoya Tecnologia, Guilmor, OrClick, Aurea Global), indicando escritório compartilhado ou virtual.<br />
+<span class="badge badge-fato">FATO</span> Victor saiu do Fernandes Lunardi em ago/2022. A WIE foi aberta em fev/2025 — intervalo de ~2,5 anos sem empresa registrada em seu nome.<br />
+<em>Fonte: BrasilAPI + buscas web.</em></p>
+<h3>7.3 Inferências sobre a WIE</h3>
+<p><span class="badge badge-infer">INFERÊNCIA</span> A WIE não funciona como escritório de advocacia — o CNAE é incompatível e Victor continua atuando como advogado pessoa física (OAB/PR 61.006) nos processos.</p>
+<p><span class="badge badge-infer">INFERÊNCIA</span> O endereço é provavelmente um <strong>endereço fiscal</strong>, não um escritório operacional — múltiplas empresas na mesma sala indicam coworking ou escritório virtual.</p>
+<h3>7.4 Questões em aberto (sem resposta)</h3>
+<p>As seguintes perguntas <strong>não podem ser respondidas</strong> com os dados disponíveis:</p>
+<ul>
+<li>Para que serve efetivamente a WIE?</li>
+<li>O que significa "WHATSNEGOCIOS" como atividade?</li>
+<li>A WIE emite notas fiscais? Para quem? Que serviço?</li>
+<li>Existe relação operacional entre a WIE e a captação dos clientes contra a Planova?</li>
+<li>Victor recebe honorários via WIE ou via pessoa física?</li>
+</ul>
+<blockquote>
+<p>[!NOTE]
+<strong>Não há evidência</strong> de que a WIE seja usada para captar credores, emitir NFs ou qualquer outra atividade específica. A empresa existe, tem CNAE de internet, nome fantasia WHATSNEGOCIOS, e nenhuma presença digital. Qualquer afirmação além disso seria especulação.</p>
+</blockquote>
+<hr />
+<h2>8. OUTROS VÍNCULOS DE VICTOR</h2>
+<h3>8.1 Escritório Leal &amp; Varasquim</h3>
+<p><span class="badge badge-fato">FATO</span> Victor publica artigos jurídicos no site <strong>lealvarasquim.com.br</strong> (artigo sobre direitos associativos em clubes, out/2025).<br />
+<em>Fonte: Busca web.</em></p>
+<p><span class="badge badge-fato">FATO</span> O domínio camposefernandes.adv.br redireciona para fernandeslunardi.com.br. O site exibe "Fernandes Lunardi Advogados" com última atualização em 21/02/2025.<br />
+<em>Fonte: Acesso direto ao site.</em></p>
+<p><span class="badge badge-infer">INFERÊNCIA</span> Victor mantém algum vínculo profissional com o escritório Leal &amp; Varasquim, ao menos para produção de conteúdo jurídico. Isso é separado de sua atuação nos processos contra a Planova.</p>
+<h3>8.2 Ação Penal Federal</h3>
+<p><span class="badge badge-fato">FATO</span> Victor atuou como <strong>advogado de defesa</strong> no processo 5036177162016.4.04.7000, ação penal por crimes contra a ordem tributária (Lei 8.137/90), na 23ª Vara Federal de Curitiba. Réu: Noel Fernandes de Amaral Filho. Envolvimento da Polícia Federal/PR. Status: Encerrado (16/09/2022).<br />
+<em>Fonte: Relatório de inteligência.</em></p>
+<h3>8.3 Dívida Pessoal</h3>
+<p><span class="badge badge-fato">FATO</span> Victor possui dívida ativa na PGFN de R$ 13.655,38, status "não ajuizável — negociada SISPAR", data 20/04/2024.<br />
+<em>Fonte: Relatório de inteligência.</em></p>
+<hr />
+<h2>9. PERFIL PESSOAL</h2>
+<p><span class="badge badge-fato">FATO</span> — Dados do relatório de inteligência:</p>
+<table>
+<thead>
+<tr>
+<th>Campo</th>
+<th>Dado</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Nome</td>
+<td>Victor Penzo Neto</td>
+</tr>
+<tr>
+<td>CPF</td>
+<td>047.044.629-35</td>
+</tr>
+<tr>
+<td>OAB</td>
+<td>PR 61.006</td>
+</tr>
+<tr>
+<td>Idade</td>
+<td>40 anos</td>
+</tr>
+<tr>
+<td>Pai</td>
+<td>Odocio Penzo</td>
+</tr>
+<tr>
+<td>Mãe</td>
+<td>Maria de Fatima Andrade Penzo</td>
+</tr>
+<tr>
+<td>Irmão</td>
+<td>Wilson Luiz Andrade Penzo</td>
+</tr>
+<tr>
+<td>E-mails</td>
+<td>victor@camposefernandes.adv.br / victorp_neto@hotmail.com / victor.penzo@gmail.com</td>
+</tr>
+<tr>
+<td>Celular</td>
+<td>(41) 99913-0808</td>
+</tr>
+</tbody>
+</table>
+<h3>Trajetória Profissional</h3>
+<table>
+<thead>
+<tr>
+<th>Empresa</th>
+<th>Vínculo</th>
+<th>Período</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>TIM Celular S.A.</td>
+<td>Funcionário</td>
+<td>jun/2006 — jun/2007</td>
+</tr>
+<tr>
+<td>Gonzaga Imóveis</td>
+<td>Funcionário</td>
+<td>abr/2012 (11 dias)</td>
+</tr>
+<tr>
+<td>Fernandes Lunardi Advogados</td>
+<td>Sócio QSA</td>
+<td>jan/2017 — ago/2022</td>
+</tr>
+<tr>
+<td>WIE Inteligência Empresarial</td>
+<td>Sócio único</td>
+<td>fev/2025 — atual</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>10. TIMELINE FACTUAL</h2>
+<pre><code>1988      Bemauto fundada (MG)
+2006      Fernandes Lunardi Advogados fundado
+2007      Transportes São Lucas fundada (MG)
+2009      F. R. da Silva Moraes fundada (PR)
+2010      Convicta Locações fundada (PR)
+2011      Horebe Soluções fundada (MG)
+2013      PESA Rental fundada (PR)
+jan/2017  Victor entra como sócio no Fernandes Lunardi
+2019      Planova Infraestrutura Ltda fundada
+out/2021  Processo #5 — Convicta vs Planova (Pinhais)
+nov/2021  Processo #2 — F R Moraes vs Planova (São Paulo)
+fev/2022  Processo #1 — Bemauto vs Planova (Barueri) — Monitória
+ago/2022  Victor SAI do Fernandes Lunardi
+out/2022  Processo #3 — Bemauto vs Planova (Barueri) — Cumprimento Sentença
+set/2024  Processo #4 — Transportes São Lucas vs Planova (São Paulo)
+nov/2024  Processo #7 — PESA vs Planova Infra (Curitiba)
+fev/2025  Victor ABRE a WIE Inteligência (WHATSNEGOCIOS)
+jul/2025  Processo #6 — Horebe vs Planova (Barueri) — R$ 247,8 MI
+???       Planova muda razão social para VALKA CONSTRUÇÕES S.A.
+</code></pre>
+<p><span class="badge badge-infer">INFERÊNCIA</span> A saída de Victor do Fernandes Lunardi (ago/2022) coincide com o período de intensificação dos processos contra a Planova (2021-2025). Ele começou a mover ações contra a Planova enquanto ainda era sócio do escritório, e continuou após sair.</p>
+<hr />
+<h2>11. LACUNAS E LIMITAÇÕES</h2>
+<table>
+<thead>
+<tr>
+<th>Lacuna</th>
+<th>Impacto</th>
+<th>Como resolver</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Relatório gerado pelo CPF (não pelo CNPJ da Valka)</td>
+<td>Processos pós-mudança de nome podem não estar cobertos</td>
+<td>Solicitar relatório pelo CNPJ 47.383.971/0001-21</td>
+</tr>
+<tr>
+<td>Zero informação sobre atividade real da WIE</td>
+<td>Não sabemos o propósito concreto da empresa</td>
+<td>Consultar NFs emitidas ou declarações fiscais</td>
+</tr>
+<tr>
+<td>Não temos o relatório de inteligência do Cesar Hipólito</td>
+<td>Não sabemos sua rede completa de conexões</td>
+<td>Solicitar relatório BigData pelo CPF de Cesar</td>
+</tr>
+<tr>
+<td>Dados processuais limitados ao que consta no relatório</td>
+<td>Processos em segredo de justiça não aparecem</td>
+<td>Consulta direta nos tribunais</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>12. FONTES UTILIZADAS</h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Fonte</th>
+<th>Tipo</th>
+<th>Confiabilidade</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Relatório BigData CPF 047.044.629-35 (121 págs)</td>
+<td>Inteligência comercial</td>
+<td>Alta</td>
+</tr>
+<tr>
+<td>2</td>
+<td>BrasilAPI /cnpj/v1/ (10 consultas)</td>
+<td>Receita Federal (espelho)</td>
+<td>Alta</td>
+</tr>
+<tr>
+<td>3</td>
+<td>PDF Petições S&amp;M (68 págs)</td>
+<td>Documento processual</td>
+<td>Alta</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Banco SQLite (100 processos, 1.024 partes)</td>
+<td>Derivado da fonte #1</td>
+<td>Alta (depende do parser)</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Busca web — analise.com</td>
+<td>Diretório de escritórios</td>
+<td>Média</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Busca web — lealvarasquim.com.br</td>
+<td>Site de escritório</td>
+<td>Média</td>
+</tr>
+<tr>
+<td>7</td>
+<td>Acesso direto — camposefernandes.adv.br</td>
+<td>Site do escritório</td>
+<td>Alta</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>13. ARQUIVOS DE SUPORTE</h2>
+<table>
+<thead>
+<tr>
+<th>Arquivo</th>
+<th>Descrição</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="file:///C:/Users/resper/.gemini/antigravity/worktrees/friendly-turing/analyze-pdf-petition-document/victor_penzo_osint.db">victor_penzo_osint.db</a></td>
+<td>Banco SQLite — 7 tabelas, 100 processos, 1.024 partes</td>
+</tr>
+<tr>
+<td><a href="file:///C:/Users/resper/.gemini/antigravity/worktrees/friendly-turing/analyze-pdf-petition-document/grafo_victor_penzo.html">grafo_victor_penzo.html</a></td>
+<td>Grafo de rede interativo</td>
+</tr>
+<tr>
+<td><a href="file:///C:/Users/resper/.gemini/antigravity/worktrees/friendly-turing/analyze-pdf-petition-document/cnpj_results.json">cnpj_results.json</a></td>
+<td>Dados brutos de 10 CNPJs</td>
+</tr>
+<tr>
+<td><a href="file:///C:/Users/resper/.gemini/antigravity/worktrees/friendly-turing/analyze-pdf-petition-document/analise_cruzada.md">analise_cruzada.md</a></td>
+<td>Análise SQL automatizada</td>
+</tr>
+</tbody>
+</table>
+  </div>
+</body>
+</html>

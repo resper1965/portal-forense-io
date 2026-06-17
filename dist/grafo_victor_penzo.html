@@ -1,0 +1,321 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        
+            <script>function neighbourhoodHighlight(params) {
+  // console.log("in nieghbourhoodhighlight");
+  allNodes = nodes.get({ returnType: "Object" });
+  // originalNodes = JSON.parse(JSON.stringify(allNodes));
+  // if something is selected:
+  if (params.nodes.length > 0) {
+    highlightActive = true;
+    var i, j;
+    var selectedNode = params.nodes[0];
+    var degrees = 2;
+
+    // mark all nodes as hard to read.
+    for (let nodeId in allNodes) {
+      // nodeColors[nodeId] = allNodes[nodeId].color;
+      allNodes[nodeId].color = "rgba(200,200,200,0.5)";
+      if (allNodes[nodeId].hiddenLabel === undefined) {
+        allNodes[nodeId].hiddenLabel = allNodes[nodeId].label;
+        allNodes[nodeId].label = undefined;
+      }
+    }
+    var connectedNodes = network.getConnectedNodes(selectedNode);
+    var allConnectedNodes = [];
+
+    // get the second degree nodes
+    for (i = 1; i < degrees; i++) {
+      for (j = 0; j < connectedNodes.length; j++) {
+        allConnectedNodes = allConnectedNodes.concat(
+          network.getConnectedNodes(connectedNodes[j])
+        );
+      }
+    }
+
+    // all second degree nodes get a different color and their label back
+    for (i = 0; i < allConnectedNodes.length; i++) {
+      // allNodes[allConnectedNodes[i]].color = "pink";
+      allNodes[allConnectedNodes[i]].color = "rgba(150,150,150,0.75)";
+      if (allNodes[allConnectedNodes[i]].hiddenLabel !== undefined) {
+        allNodes[allConnectedNodes[i]].label =
+          allNodes[allConnectedNodes[i]].hiddenLabel;
+        allNodes[allConnectedNodes[i]].hiddenLabel = undefined;
+      }
+    }
+
+    // all first degree nodes get their own color and their label back
+    for (i = 0; i < connectedNodes.length; i++) {
+      // allNodes[connectedNodes[i]].color = undefined;
+      allNodes[connectedNodes[i]].color = nodeColors[connectedNodes[i]];
+      if (allNodes[connectedNodes[i]].hiddenLabel !== undefined) {
+        allNodes[connectedNodes[i]].label =
+          allNodes[connectedNodes[i]].hiddenLabel;
+        allNodes[connectedNodes[i]].hiddenLabel = undefined;
+      }
+    }
+
+    // the main node gets its own color and its label back.
+    // allNodes[selectedNode].color = undefined;
+    allNodes[selectedNode].color = nodeColors[selectedNode];
+    if (allNodes[selectedNode].hiddenLabel !== undefined) {
+      allNodes[selectedNode].label = allNodes[selectedNode].hiddenLabel;
+      allNodes[selectedNode].hiddenLabel = undefined;
+    }
+  } else if (highlightActive === true) {
+    // console.log("highlightActive was true");
+    // reset all nodes
+    for (let nodeId in allNodes) {
+      // allNodes[nodeId].color = "purple";
+      allNodes[nodeId].color = nodeColors[nodeId];
+      // delete allNodes[nodeId].color;
+      if (allNodes[nodeId].hiddenLabel !== undefined) {
+        allNodes[nodeId].label = allNodes[nodeId].hiddenLabel;
+        allNodes[nodeId].hiddenLabel = undefined;
+      }
+    }
+    highlightActive = false;
+  }
+
+  // transform the object into an array
+  var updateArray = [];
+  if (params.nodes.length > 0) {
+    for (let nodeId in allNodes) {
+      if (allNodes.hasOwnProperty(nodeId)) {
+        // console.log(allNodes[nodeId]);
+        updateArray.push(allNodes[nodeId]);
+      }
+    }
+    nodes.update(updateArray);
+  } else {
+    // console.log("Nothing was selected");
+    for (let nodeId in allNodes) {
+      if (allNodes.hasOwnProperty(nodeId)) {
+        // console.log(allNodes[nodeId]);
+        // allNodes[nodeId].color = {};
+        updateArray.push(allNodes[nodeId]);
+      }
+    }
+    nodes.update(updateArray);
+  }
+}
+
+function filterHighlight(params) {
+  allNodes = nodes.get({ returnType: "Object" });
+  // if something is selected:
+  if (params.nodes.length > 0) {
+    filterActive = true;
+    let selectedNodes = params.nodes;
+
+    // hiding all nodes and saving the label
+    for (let nodeId in allNodes) {
+      allNodes[nodeId].hidden = true;
+      if (allNodes[nodeId].savedLabel === undefined) {
+        allNodes[nodeId].savedLabel = allNodes[nodeId].label;
+        allNodes[nodeId].label = undefined;
+      }
+    }
+
+    for (let i=0; i < selectedNodes.length; i++) {
+      allNodes[selectedNodes[i]].hidden = false;
+      if (allNodes[selectedNodes[i]].savedLabel !== undefined) {
+        allNodes[selectedNodes[i]].label = allNodes[selectedNodes[i]].savedLabel;
+        allNodes[selectedNodes[i]].savedLabel = undefined;
+      }
+    }
+
+  } else if (filterActive === true) {
+    // reset all nodes
+    for (let nodeId in allNodes) {
+      allNodes[nodeId].hidden = false;
+      if (allNodes[nodeId].savedLabel !== undefined) {
+        allNodes[nodeId].label = allNodes[nodeId].savedLabel;
+        allNodes[nodeId].savedLabel = undefined;
+      }
+    }
+    filterActive = false;
+  }
+
+  // transform the object into an array
+  var updateArray = [];
+  if (params.nodes.length > 0) {
+    for (let nodeId in allNodes) {
+      if (allNodes.hasOwnProperty(nodeId)) {
+        updateArray.push(allNodes[nodeId]);
+      }
+    }
+    nodes.update(updateArray);
+  } else {
+    for (let nodeId in allNodes) {
+      if (allNodes.hasOwnProperty(nodeId)) {
+        updateArray.push(allNodes[nodeId]);
+      }
+    }
+    nodes.update(updateArray);
+  }
+}
+
+function selectNode(nodes) {
+  network.selectNodes(nodes);
+  neighbourhoodHighlight({ nodes: nodes });
+  return nodes;
+}
+
+function selectNodes(nodes) {
+  network.selectNodes(nodes);
+  filterHighlight({nodes: nodes});
+  return nodes;
+}
+
+function highlightFilter(filter) {
+  let selectedNodes = []
+  let selectedProp = filter['property']
+  if (filter['item'] === 'node') {
+    let allNodes = nodes.get({ returnType: "Object" });
+    for (let nodeId in allNodes) {
+      if (allNodes[nodeId][selectedProp] && filter['value'].includes((allNodes[nodeId][selectedProp]).toString())) {
+        selectedNodes.push(nodeId)
+      }
+    }
+  }
+  else if (filter['item'] === 'edge'){
+    let allEdges = edges.get({returnType: 'object'});
+    // check if the selected property exists for selected edge and select the nodes connected to the edge
+    for (let edge in allEdges) {
+      if (allEdges[edge][selectedProp] && filter['value'].includes((allEdges[edge][selectedProp]).toString())) {
+        selectedNodes.push(allEdges[edge]['from'])
+        selectedNodes.push(allEdges[edge]['to'])
+      }
+    }
+  }
+  selectNodes(selectedNodes)
+}</script>
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/dist/vis-network.min.css" integrity="sha512-WgxfT5LWjfszlPHXRmBWHkV2eceiWTOBvrKCNbdgDYTHrT2AeLCGbF4sZlZw3UMN3WtL0tGUoIAKsu8mllg/XA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/vis-network.min.js" integrity="sha512-LnvoEWDFrqGHlHmDD2101OrLcbsfkrzoSpvtSQtxK3RMnRV0eOkhhBN2dXHKRrUU8p2DGRTk35n4O8nWSVe1mQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+            
+            
+            
+            
+            
+            
+
+        
+<center>
+<h1>Rede de Conexoes - Victor Penzo Neto vs Planova</h1>
+</center>
+
+<!-- <link rel="stylesheet" href="../node_modules/vis/dist/vis.min.css" type="text/css" />
+<script type="text/javascript" src="../node_modules/vis/dist/vis.js"> </script>-->
+        <link
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css"
+          rel="stylesheet"
+          integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6"
+          crossorigin="anonymous"
+        />
+        <script
+          src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js"
+          integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf"
+          crossorigin="anonymous"
+        ></script>
+
+
+        <center>
+          <h1>Rede de Conexoes - Victor Penzo Neto vs Planova</h1>
+        </center>
+        <style type="text/css">
+
+             #mynetwork {
+                 width: 100%;
+                 height: 900px;
+                 background-color: #1a1a2e;
+                 border: 1px solid lightgray;
+                 position: relative;
+                 float: left;
+             }
+
+             
+
+             
+
+             
+        </style>
+    </head>
+
+
+    <body>
+        <div class="card" style="width: 100%">
+            
+            
+            <div id="mynetwork" class="card-body"></div>
+        </div>
+
+        
+        
+
+        <script type="text/javascript">
+
+              // initialize global variables.
+              var edges;
+              var nodes;
+              var allNodes;
+              var allEdges;
+              var nodeColors;
+              var originalNodes;
+              var network;
+              var container;
+              var options, data;
+              var filter = {
+                  item : '',
+                  property : '',
+                  value : []
+              };
+
+              
+
+              
+
+              // This method is responsible for drawing the graph, returns the drawn network
+              function drawGraph() {
+                  var container = document.getElementById('mynetwork');
+
+                  
+
+                  // parsing and collecting nodes and edges from the python
+                  nodes = new vis.DataSet([{"color": "#ff0000", "font": {"color": "white"}, "id": "VICTOR PENZO NETO", "label": "VICTOR PENZO\nNETO", "shape": "dot", "size": 50, "title": "\u003cb\u003eVictor Penzo Neto\u003c/b\u003e\u003cbr\u003eOAB/PR 61.006\u003cbr\u003eCPF: 047.044.629-35\u003cbr\u003eIdade: 40 anos"}, {"color": "#ffd43b", "font": {"color": "white"}, "id": "BEMAUTO CAMINHOES", "label": "BEMAUTO CAMINHOES", "shape": "dot", "size": 30, "title": "\u003cb\u003eBEMAUTO CAMINHOES\u003c/b\u003e\u003cbr\u003eCNPJ: 24016446000172\u003cbr\u003eSede: Belo Horizonte/MG\u003cbr\u003eCapital: R$ 200.000"}, {"color": "#ffd43b", "font": {"color": "white"}, "id": "F R DA SILVA MORAES", "label": "F R DA SILVA MORAES", "shape": "dot", "size": 30, "title": "\u003cb\u003eF R DA SILVA MORAES\u003c/b\u003e\u003cbr\u003eCNPJ: 10887423000129\u003cbr\u003eSede: Campina da Lagoa/PR\u003cbr\u003eCapital: R$ 800.000"}, {"color": "#ffd43b", "font": {"color": "white"}, "id": "TRANSPORTES SAO LUCAS", "label": "TRANSPORTES SAO LUCAS", "shape": "dot", "size": 30, "title": "\u003cb\u003eTRANSPORTES SAO LUCAS\u003c/b\u003e\u003cbr\u003eCNPJ: 08586780000105\u003cbr\u003eSede: Januaria/MG\u003cbr\u003eCapital: R$ 100.000"}, {"color": "#ffd43b", "font": {"color": "white"}, "id": "CONVICTA LOCACOES", "label": "CONVICTA LOCACOES", "shape": "dot", "size": 30, "title": "\u003cb\u003eCONVICTA LOCACOES\u003c/b\u003e\u003cbr\u003eCNPJ: 12072549000170\u003cbr\u003eSede: S.J. dos Pinhais/PR\u003cbr\u003eCapital: R$ 20.000"}, {"color": "#ffd43b", "font": {"color": "white"}, "id": "HOREBE SOLUCOES", "label": "HOREBE SOLUCOES", "shape": "dot", "size": 30, "title": "\u003cb\u003eHOREBE SOLUCOES\u003c/b\u003e\u003cbr\u003eCNPJ: 14286623000187\u003cbr\u003eSede: Betim/MG\u003cbr\u003eCapital: R$ 100.000"}, {"color": "#ffd43b", "font": {"color": "white"}, "id": "NEXT RENTAL (PESA)", "label": "NEXT RENTAL (PESA)", "shape": "dot", "size": 30, "title": "\u003cb\u003eNEXT RENTAL (PESA)\u003c/b\u003e\u003cbr\u003eCNPJ: 19266802000176\u003cbr\u003eSede: Curitiba/PR\u003cbr\u003eCapital: R$ 217.235.490"}, {"color": "#ffd43b", "font": {"color": "white"}, "id": "S\u0026M LOCACAO", "label": "S\u0026M LOCACAO", "shape": "dot", "size": 30, "title": "\u003cb\u003eS\u0026M LOCACAO\u003c/b\u003e\u003cbr\u003eCNPJ: desconhecido\u003cbr\u003eSede: ?\u003cbr\u003eCapital: ?"}, {"color": "#868e96", "font": {"color": "white"}, "id": "PLANOVA (VALKA)", "label": "PLANOVA\n(VALKA CONSTRUCOES S.A.)", "shape": "dot", "size": 45, "title": "\u003cb\u003ePlanova / Valka Construcoes S.A.\u003c/b\u003e\u003cbr\u003eCNPJ: 47.383.971/0001-21\u003cbr\u003eCapital: R$ 265.514.240\u003cbr\u003eSede: Barueri/SP"}, {"color": "#495057", "font": {"color": "white"}, "id": "PLANOVA INFRA", "label": "PLANOVA\nINFRAESTRUTURA", "shape": "dot", "size": 30, "title": "\u003cb\u003ePlanova Infraestrutura Ltda\u003c/b\u003e\u003cbr\u003eCNPJ: 32.965.375/0001-82\u003cbr\u003eCapital: R$ 28.441.866\u003cbr\u003eSede: Sao Paulo/SP"}, {"color": "#4ecdc4", "font": {"color": "white"}, "id": "CESAR HIPOLITO PEREIRA", "label": "CESAR HIPOLITO\nPEREIRA", "shape": "dot", "size": 30, "title": "\u003cb\u003eCesar Hipolito Pereira\u003c/b\u003e\u003cbr\u003eCPF: 257.410.198-70\u003cbr\u003eCo-advogado em todos os processos Planova"}, {"color": "#e74c3c", "font": {"color": "white"}, "id": "WIE INTELIGENCIA", "label": "WIE INTELIGENCIA\nEMPRESARIAL", "shape": "dot", "size": 25, "title": "\u003cb\u003eWIE Inteligencia Empresarial Ltda\u003c/b\u003e\u003cbr\u003eCNPJ: 59.316.426/0001-00\u003cbr\u003eAberta: 05/02/2025\u003cbr\u003eCapital: R$ 10.000\u003cbr\u003eNome Fantasia: WHATSNEGOCIOS\u003cbr\u003eVictor e unico socio"}, {"color": "#6c757d", "font": {"color": "white"}, "id": "FERNANDES LUNARDI", "label": "FERNANDES LUNARDI\nADVOGADOS", "shape": "dot", "size": 25, "title": "\u003cb\u003eFernandes Lunardi Advogados\u003c/b\u003e\u003cbr\u003eCNPJ: 07.929.012/0001-44\u003cbr\u003eBatel, Curitiba/PR\u003cbr\u003eVictor saiu em ago/2022"}, {"color": "#adb5bd", "font": {"color": "white"}, "id": "JACKSON SONDAHL DE CAMPOS", "label": "JACKSON CAMPOS", "shape": "dot", "size": 20, "title": "\u003cb\u003eJACKSON SONDAHL DE CAMPOS\u003c/b\u003e\u003cbr\u003eSocio + Colega Faculdade\n35+ processos juntos"}, {"color": "#adb5bd", "font": {"color": "white"}, "id": "FABIO FERNANDES LUNARDI", "label": "FABIO LUNARDI", "shape": "dot", "size": 20, "title": "\u003cb\u003eFABIO FERNANDES LUNARDI\u003c/b\u003e\u003cbr\u003eSocio-Administrador"}, {"color": "#adb5bd", "font": {"color": "white"}, "id": "WAGNER BARONE LOPES", "label": "WAGNER LOPES", "shape": "dot", "size": 20, "title": "\u003cb\u003eWAGNER BARONE LOPES\u003c/b\u003e\u003cbr\u003eSocio\n20+ processos juntos"}, {"color": "#9b59b6", "font": {"color": "white"}, "id": "ODOCIO PENZO", "label": "ODOCIO PENZO", "shape": "dot", "size": 15, "title": "\u003cb\u003eODOCIO PENZO\u003c/b\u003e\u003cbr\u003eParentesco: Pai"}, {"color": "#9b59b6", "font": {"color": "white"}, "id": "MARIA DE FATIMA A. PENZO", "label": "MARIA PENZO", "shape": "dot", "size": 15, "title": "\u003cb\u003eMARIA DE FATIMA A. PENZO\u003c/b\u003e\u003cbr\u003eParentesco: Mae"}, {"color": "#8e44ad", "font": {"color": "white"}, "id": "WILSON L. A. PENZO", "label": "WILSON PENZO", "shape": "dot", "size": 15, "title": "\u003cb\u003eWILSON L. A. PENZO\u003c/b\u003e\u003cbr\u003eParentesco: Irmao"}, {"color": "#8e44ad", "font": {"color": "white"}, "id": "FERNANDA K. A. PENZO SILVA", "label": "FERNANDA SILVA", "shape": "dot", "size": 15, "title": "\u003cb\u003eFERNANDA K. A. PENZO SILVA\u003c/b\u003e\u003cbr\u003eParentesco: Irma"}, {"color": "#495057", "font": {"color": "white"}, "id": "MARCELO MATOS NOGUEIRA", "label": "MARCELO NOGUEIRA", "shape": "dot", "size": 18, "title": "\u003cb\u003eMARCELO MATOS NOGUEIRA\u003c/b\u003e\u003cbr\u003eDiretor Planova/Valka + Planova Infra"}, {"color": "#495057", "font": {"color": "white"}, "id": "RICARDO PORTO FACCHINI", "label": "RICARDO FACCHINI", "shape": "dot", "size": 18, "title": "\u003cb\u003eRICARDO PORTO FACCHINI\u003c/b\u003e\u003cbr\u003eDiretor Planova/Valka + Planova Infra"}, {"color": "#2ecc71", "font": {"color": "white"}, "id": "CONSORCIO AGUAS LIMPAS", "label": "CONSORCIO\nAGUAS LIMPAS", "shape": "dot", "size": 20, "title": "\u003cb\u003eConsorcio Aguas Limpas\u003c/b\u003e\u003cbr\u003eCNPJ: 17.121.585/0001-09\u003cbr\u003eContrato 028/2012 SEHAB SP"}, {"color": "#3498db", "font": {"color": "white"}, "id": "SEHAB SP", "label": "SEHAB\nSao Paulo", "shape": "dot", "size": 20, "title": "\u003cb\u003eSecretaria Municipal de Habitacao\u003c/b\u003e\u003cbr\u003ePrefeitura de Sao Paulo\u003cbr\u003ePenhora de creditos solicitada por Victor"}]);
+                  edges = new vis.DataSet([{"arrows": "to", "color": "#ffd43b", "from": "VICTOR PENZO NETO", "label": "advoga", "to": "BEMAUTO CAMINHOES", "width": 2}, {"arrows": "to", "color": "#ffd43b", "from": "VICTOR PENZO NETO", "label": "advoga", "to": "F R DA SILVA MORAES", "width": 2}, {"arrows": "to", "color": "#ffd43b", "from": "VICTOR PENZO NETO", "label": "advoga", "to": "TRANSPORTES SAO LUCAS", "width": 2}, {"arrows": "to", "color": "#ffd43b", "from": "VICTOR PENZO NETO", "label": "advoga", "to": "CONVICTA LOCACOES", "width": 2}, {"arrows": "to", "color": "#ffd43b", "from": "VICTOR PENZO NETO", "label": "advoga", "to": "HOREBE SOLUCOES", "width": 2}, {"arrows": "to", "color": "#ffd43b", "from": "VICTOR PENZO NETO", "label": "advoga", "to": "NEXT RENTAL (PESA)", "width": 2}, {"arrows": "to", "color": "#ffd43b", "from": "VICTOR PENZO NETO", "label": "advoga", "to": "S\u0026M LOCACAO", "width": 2}, {"arrows": "to", "color": "#495057", "from": "PLANOVA (VALKA)", "label": "controla", "to": "PLANOVA INFRA", "width": 1}, {"arrows": "to", "color": "#ff6b6b", "from": "BEMAUTO CAMINHOES", "label": "processa", "to": "PLANOVA (VALKA)", "width": 3}, {"arrows": "to", "color": "#ff6b6b", "from": "F R DA SILVA MORAES", "label": "processa", "to": "PLANOVA (VALKA)", "width": 3}, {"arrows": "to", "color": "#ff6b6b", "from": "TRANSPORTES SAO LUCAS", "label": "processa", "to": "PLANOVA (VALKA)", "width": 3}, {"arrows": "to", "color": "#ff6b6b", "from": "CONVICTA LOCACOES", "label": "processa", "to": "PLANOVA (VALKA)", "width": 3}, {"arrows": "to", "color": "#ff6b6b", "from": "HOREBE SOLUCOES", "label": "processa", "to": "PLANOVA (VALKA)", "width": 3}, {"arrows": "to", "color": "#ff6b6b", "from": "NEXT RENTAL (PESA)", "label": "processa", "to": "PLANOVA INFRA", "width": 3}, {"arrows": "to", "color": "#ff6b6b", "from": "S\u0026M LOCACAO", "label": "processa", "to": "PLANOVA (VALKA)", "width": 3}, {"arrows": "to", "color": "#4ecdc4", "from": "VICTOR PENZO NETO", "label": "co-advogado", "to": "CESAR HIPOLITO PEREIRA", "width": 2}, {"arrows": "to", "color": "#e74c3c", "from": "VICTOR PENZO NETO", "label": "socio (atual)", "to": "WIE INTELIGENCIA", "width": 2}, {"arrows": "to", "color": "#6c757d", "dashes": true, "from": "VICTOR PENZO NETO", "label": "ex-socio (2017-2022)", "to": "FERNANDES LUNARDI", "width": 1}, {"arrows": "to", "color": "#adb5bd", "from": "JACKSON SONDAHL DE CAMPOS", "label": "socio", "to": "FERNANDES LUNARDI", "width": 1}, {"arrows": "to", "color": "#adb5bd", "from": "FABIO FERNANDES LUNARDI", "label": "socio", "to": "FERNANDES LUNARDI", "width": 1}, {"arrows": "to", "color": "#adb5bd", "from": "WAGNER BARONE LOPES", "label": "socio", "to": "FERNANDES LUNARDI", "width": 1}, {"arrows": "to", "color": "#9b59b6", "from": "VICTOR PENZO NETO", "label": "pai", "to": "ODOCIO PENZO", "width": 1}, {"arrows": "to", "color": "#9b59b6", "from": "VICTOR PENZO NETO", "label": "mae", "to": "MARIA DE FATIMA A. PENZO", "width": 1}, {"arrows": "to", "color": "#8e44ad", "from": "VICTOR PENZO NETO", "label": "irmao", "to": "WILSON L. A. PENZO", "width": 1}, {"arrows": "to", "color": "#8e44ad", "from": "VICTOR PENZO NETO", "label": "irma", "to": "FERNANDA K. A. PENZO SILVA", "width": 1}, {"arrows": "to", "color": "#495057", "from": "MARCELO MATOS NOGUEIRA", "label": "diretor", "to": "PLANOVA (VALKA)", "width": 1}, {"arrows": "to", "color": "#495057", "from": "MARCELO MATOS NOGUEIRA", "label": "admin", "to": "PLANOVA INFRA", "width": 1}, {"arrows": "to", "color": "#495057", "from": "RICARDO PORTO FACCHINI", "label": "diretor", "to": "PLANOVA (VALKA)", "width": 1}, {"arrows": "to", "color": "#495057", "from": "RICARDO PORTO FACCHINI", "label": "admin", "to": "PLANOVA INFRA", "width": 1}, {"arrows": "to", "color": "#2ecc71", "from": "PLANOVA (VALKA)", "label": "integra", "to": "CONSORCIO AGUAS LIMPAS", "width": 1}, {"arrows": "to", "color": "#3498db", "from": "CONSORCIO AGUAS LIMPAS", "label": "contrato", "to": "SEHAB SP", "width": 1}]);
+
+                  nodeColors = {};
+                  allNodes = nodes.get({ returnType: "Object" });
+                  for (nodeId in allNodes) {
+                    nodeColors[nodeId] = allNodes[nodeId].color;
+                  }
+                  allEdges = edges.get({ returnType: "Object" });
+                  // adding nodes and edges to the graph
+                  data = {nodes: nodes, edges: edges};
+
+                  var options = {"interaction": {"hover": true, "navigationButtons": true, "keyboard": true}, "physics": {"barnesHut": {"gravitationalConstant": -8000, "centralGravity": 0.3, "springLength": 200, "springConstant": 0.01, "damping": 0.09}}};
+
+                  
+
+
+                  
+
+                  network = new vis.Network(container, data, options);
+
+                  
+
+                  
+
+                  
+
+
+                  
+
+                  return network;
+
+              }
+              drawGraph();
+        </script>
+    </body>
+</html>

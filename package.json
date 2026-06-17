@@ -1,0 +1,17 @@
+{
+  "name": "forense-portal",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "wrangler pages dev dist",
+    "deploy": "wrangler pages deploy dist",
+    "db:migrate": "wrangler d1 execute forense-db --file=migrations/0001_initial.sql",
+    "db:migrate:local": "wrangler d1 execute forense-db --file=migrations/0001_initial.sql --local"
+  },
+  "devDependencies": {
+    "wrangler": "^4.0.0"
+  },
+  "dependencies": {
+    "aws4fetch": "^1.0.20"
+  }
+}

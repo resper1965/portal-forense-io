@@ -1,0 +1,37 @@
+#:schema node_modules/wrangler/config-schema.json
+
+name = "forense-portal"
+compatibility_date = "2026-06-01"
+pages_build_output_dir = "./dist"
+
+# D1 Database
+[[d1_databases]]
+binding = "DB"
+database_name = "forense-db"
+database_id = "2784e136-6da6-423d-b6d0-0f16726a08d9"
+
+# R2 Bucket
+[[r2_buckets]]
+binding = "BUCKET"
+bucket_name = "forense-bucket"
+
+# KV Namespace
+[[kv_namespaces]]
+binding = "SESSIONS"
+id = "33b6993601dc4738b410d12455b8876f"
+
+# Email Service — configurar via dashboard do Cloudflare
+# (Pages Functions não suporta send_email no wrangler.toml)
+
+[vars]
+CF_ACCESS_TEAM = "forense"
+R2_ACCOUNT_ID = "0a6c490dd5fe9051422c15c9e133138e"
+R2_ENDPOINT = "https://0a6c490dd5fe9051422c15c9e133138e.r2.cloudflarestorage.com"
+ALLOWED_UPLOAD_TYPES = "application/pdf,image/jpeg,image/png,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+MAX_UPLOAD_SIZE = "52428800"
+
+# Secrets (configurar via wrangler secret put):
+# CF_ACCESS_AUD
+# R2_ACCESS_KEY_ID
+# R2_SECRET_ACCESS_KEY
+# TURNSTILE_SECRET
