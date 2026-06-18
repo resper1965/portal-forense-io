@@ -313,6 +313,30 @@
     }, 200);
   };
 
+  window.__viewDeliverable = function (url, title) {
+    // Open modal with iframe
+    const iframeHtml = `<iframe src="${url}" style="width: 100%; height: 100%; border: none; background: #fff; border-radius: var(--radius-md);"></iframe>`;
+    openModal(title, iframeHtml);
+    
+    // Override modal styling to make it wide and responsive
+    const modalEl = document.querySelector('#modal-overlay .modal');
+    if (modalEl) {
+      modalEl.style.maxWidth = '1200px';
+      modalEl.style.width = '95vw';
+      modalEl.style.maxHeight = '90vh';
+      modalEl.style.height = '90vh';
+      const bodyEl = modalEl.querySelector('.modal-body');
+      if (bodyEl) {
+        bodyEl.style.padding = 'var(--space-12)';
+        bodyEl.style.height = 'calc(100% - 70px)';
+        const iframeEl = bodyEl.querySelector('iframe');
+        if (iframeEl) {
+          iframeEl.style.height = '100%';
+        }
+      }
+    }
+  };
+
   // ────────────────────────────────────────────────────────────────
   // ROUTER
   // ────────────────────────────────────────────────────────────────
@@ -797,7 +821,22 @@
                 <div class="deliverable-title">${escapeHtml(e.titulo || e.title || e.nome || '')}</div>
                 <div class="deliverable-type">${escapeHtml(e.tipo || e.type || '')}</div>
               </div>
-              ${e.url ? `<a href="${e.url}" target="_blank" class="btn btn-primary btn-sm">${SVG_ICONS.download} Download</a>` : ''}
+              ${e.url ? `
+                <div style="display: flex; gap: var(--space-8); flex-wrap: wrap;">
+                  ${(e.mime_type === 'text/html' || e.r2_key?.endsWith('.html')) ? `
+                    <button onclick="window.__viewDeliverable('${e.url}', '${escapeHtml(e.titulo || '')}')" class="btn btn-primary btn-sm" style="display:flex; align-items:center; gap:var(--space-4);">
+                      <svg width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'>
+                        <path d='M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z'/>
+                        <circle cx='12' cy='12' r='3'/>
+                      </svg>
+                      Visualizar
+                    </button>
+                  ` : ''}
+                  <a href="${e.url}" target="_blank" class="btn btn-secondary btn-sm" style="display:flex; align-items:center; gap:var(--space-4);">
+                    ${SVG_ICONS.download} Baixar
+                  </a>
+                </div>
+              ` : ''}
             </div>
           `).join('')}
         </div>
