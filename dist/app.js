@@ -696,7 +696,7 @@
     const data = await api.get('/projetos');
     if (!data) return renderEmpty('Erro ao carregar projetos.');
 
-    state.projects = Array.isArray(data) ? data : (data.projects || data.data || []);
+    state.projects = Array.isArray(data) ? data : (data.projetos || data.projects || data.data || []);
 
     const nome = state.user.nome || state.user.name || '';
     const firstName = nome.split(' ')[0];
@@ -728,8 +728,8 @@
     if (!data) return renderEmpty('Projeto não encontrado.');
 
     state.currentProject = data;
-    const p = data;
-    const code = p.codigo_proposta || p.code || '—';
+    const p = data.projeto || data;
+    const code = p.codigo || p.codigo_proposta || p.code || '—';
     const title = p.titulo || p.title || 'Sem título';
     const status = p.status || 'proposta';
     const tab = state.currentTab;
@@ -763,7 +763,7 @@
   async function renderTabContent(tab, projectId) {
     if (tab === 'entregas') {
       const p = state.currentProject;
-      const entregas = p.entregas || p.deliverables || [];
+      const entregas = p.entregaveis || p.entregas || p.deliverables || [];
 
       if (entregas.length === 0) {
         return renderEmpty('Nenhum entregável disponível.', SVG_ICONS.fileText);
@@ -813,7 +813,12 @@
     const stats = await api.get('/admin/stats');
 
     const s = stats || {};
-    const activities = Array.isArray(s.recent_activity) ? s.recent_activity : [];
+    const timeline = s.recent_timeline || [];
+    const activities = timeline.map(t => ({
+      actor: t.autor || 'Sistema',
+      action: `${t.titulo} (${t.projeto_codigo})${t.descricao ? `: ${t.descricao}` : ''}`,
+      created_at: t.created_at
+    }));
 
     return `
       <div class="page-content-header" style="border-bottom:1px solid var(--border); padding-bottom:var(--space-20); margin-bottom:var(--space-24);">
@@ -825,22 +830,22 @@
         <div class="stat-card">
           <span class="stat-icon">${SVG_ICONS.folder}</span>
           <div class="stat-label">Total de Projetos</div>
-          <div class="stat-value">${s.total_projetos || s.total_projects || 0}</div>
+          <div class="stat-value">${s.stats?.total_projetos || s.total_projetos || s.total_projects || 0}</div>
         </div>
         <div class="stat-card">
           <span class="stat-icon">${SVG_ICONS.refresh}</span>
           <div class="stat-label">Projetos Ativos</div>
-          <div class="stat-value">${s.projetos_ativos || s.active_projects || 0}</div>
+          <div class="stat-value">${s.stats?.projetos_ativos || s.projetos_ativos || s.active_projects || 0}</div>
         </div>
         <div class="stat-card">
           <span class="stat-icon">${SVG_ICONS.upload}</span>
           <div class="stat-label">Uploads Pendentes</div>
-          <div class="stat-value">${s.uploads_pendentes || s.pending_uploads || 0}</div>
+          <div class="stat-value">${s.stats?.uploads_pendentes || s.uploads_pendentes || s.pending_uploads || 0}</div>
         </div>
         <div class="stat-card">
           <span class="stat-icon">${SVG_ICONS.users}</span>
           <div class="stat-label">Clientes</div>
-          <div class="stat-value">${s.total_clientes || s.total_clients || 0}</div>
+          <div class="stat-value">${s.stats?.total_clientes || s.total_clientes || s.total_clients || 0}</div>
         </div>
       </div>
 
@@ -866,7 +871,7 @@
   // — ADMIN CLIENTES ——————————————————————————————————————————
   async function renderAdminClientes() {
     const data = await api.get('/admin/clientes');
-    const clients = Array.isArray(data) ? data : (data?.clients || data?.data || []);
+    const clients = Array.isArray(data) ? data : (data?.clientes || data?.clients || data?.data || []);
 
     return `
       <div class="page-content-header" style="display:flex; justify-content:space-between; align-items:flex-start; border-bottom:1px solid var(--border); padding-bottom:var(--space-20); margin-bottom:var(--space-24);">
@@ -891,22 +896,24 @@
             </tr>
           </thead>
           <tbody>
-            ${clients.map((c) => `
+            ${clients.map((c) => {
+              const status = (c.ativo === 1 || c.status === 'ativo') ? 'ativo' : 'inativo';
+              return `
               <tr>
                 <td class="primary">${escapeHtml(c.nome || c.name || '')}</td>
                 <td>${escapeHtml(c.empresa || c.company || '—')}</td>
                 <td><span class="code">${escapeHtml(c.email || '')}</span></td>
                 <td class="mono">${c.projetos_count || c.projects_count || 0}</td>
-                <td>${renderBadge(c.status || 'ativo')}</td>
+                <td>${renderBadge(status)}</td>
                 <td class="actions">
                   <button class="btn btn-ghost btn-sm" onclick="window.__editClient('${c.id}')">Editar</button>
-                  <button class="btn btn-ghost btn-sm" onclick="window.__toggleClient('${c.id}', '${c.status}')" style="color:var(--text-secondary);">
-                    ${c.status === 'ativo' ? 'Desativar' : 'Ativar'}
+                  <button class="btn btn-ghost btn-sm" onclick="window.__toggleClient('${c.id}', '${status}')" style="color:var(--text-secondary);">
+                    ${status === 'ativo' ? 'Desativar' : 'Ativar'}
                   </button>
                   <button class="btn btn-ghost btn-sm text-danger" onclick="window.__deleteClient('${c.id}')">Excluir</button>
                 </td>
               </tr>
-            `).join('')}
+            `;})}
           </tbody>
         </table>
       </div>
@@ -917,7 +924,7 @@
   // — ADMIN PROJETOS ——————————————————————————————————————————
   async function renderAdminProjetos() {
     const data = await api.get('/projetos');
-    const projects = Array.isArray(data) ? data : (data?.projects || data?.data || []);
+    const projects = Array.isArray(data) ? data : (data?.projetos || data?.projects || data?.data || []);
 
     return `
       <div class="page-content-header" style="display:flex; justify-content:space-between; align-items:flex-start; border-bottom:1px solid var(--border); padding-bottom:var(--space-20); margin-bottom:var(--space-24);">
@@ -1265,7 +1272,7 @@
   window.__editClient = async function (id) {
     // Fetch all clients and filter client-side (no individual GET endpoint)
     const data = await api.get('/admin/clientes');
-    const clients = Array.isArray(data) ? data : (data?.clients || data?.data || []);
+    const clients = Array.isArray(data) ? data : (data?.clientes || data?.clients || data?.data || []);
     const client = clients.find(c => c.id === id);
     if (!client) {
       showToast('Cliente não encontrado.', 'error');
@@ -1326,7 +1333,7 @@
 
   window.__toggleClient = async function (id, currentStatus) {
     const newStatus = currentStatus === 'ativo' ? 'inativo' : 'ativo';
-    const result = await api.put('/admin/clientes', { id, status: newStatus });
+    const result = await api.put('/admin/clientes', { id, ativo: newStatus === 'ativo' ? 1 : 0 });
     if (result) {
       showToast(`Cliente ${newStatus === 'ativo' ? 'ativado' : 'desativado'}.`, 'success');
       handleRoute();
