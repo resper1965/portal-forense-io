@@ -337,6 +337,22 @@
     }
   };
 
+  window.__decideProposal = async function (id, decisao) {
+    const actionLabel = decisao === 'aceitar' ? 'aceitar' : 'recusar';
+    if (!confirm(`Tem certeza de que deseja ${actionLabel} esta proposta?`)) return;
+    
+    try {
+      const result = await api.post(`/projetos/${id}/decidir`, { decisao });
+      if (result && result.success) {
+        showToast(`Proposta ${decisao === 'aceitar' ? 'aceita' : 'recusada'} com sucesso!`, 'success');
+        handleRoute();
+      }
+    } catch (e) {
+      console.error('Error deciding proposal:', e);
+      showToast('Erro ao enviar decisão. Tente novamente.', 'error');
+    }
+  };
+
   // ────────────────────────────────────────────────────────────────
   // ROUTER
   // ────────────────────────────────────────────────────────────────
@@ -790,6 +806,31 @@
         </div>
         <a href="#/dashboard" class="btn btn-secondary btn-sm" style="flex-shrink:0;">← Voltar</a>
       </div>
+
+      ${(!state.user.isAdmin && status === 'proposta') ? `
+        <div class="proposal-decision-card" style="
+          background: var(--bg-secondary);
+          border: 1px solid var(--border);
+          border-left: 4px solid var(--accent);
+          border-radius: var(--radius-lg);
+          padding: var(--space-20);
+          margin-bottom: var(--space-24);
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: var(--space-16);
+          flex-wrap: wrap;
+        ">
+          <div>
+            <div style="font-weight: 600; font-size: 1.05rem; color: var(--text-primary); margin-bottom: 4px;">Proposta Comercial Pendente</div>
+            <div style="font-size: 0.85rem; color: var(--text-secondary);">Esta é uma proposta de investigação comercial. Por favor, revise os entregáveis e confirme a aprovação para iniciar o escopo do projeto.</div>
+          </div>
+          <div style="display: flex; gap: var(--space-12);">
+            <button onclick="window.__decideProposal('${p.id}', 'recusar')" class="btn btn-secondary btn-sm" style="border-color: var(--danger); color: var(--danger); background: none; border-radius: var(--radius-md); padding: 8px 16px; cursor: pointer; transition: all 0.2s ease;">Recusar</button>
+            <button onclick="window.__decideProposal('${p.id}', 'aceitar')" class="btn btn-primary btn-sm" style="background: var(--accent); color: var(--bg-primary); border: none; border-radius: var(--radius-md); padding: 8px 16px; cursor: pointer; font-weight: 600; transition: all 0.2s ease;">Aceitar Proposta</button>
+          </div>
+        </div>
+      ` : ''}
 
       <div class="tab-bar" id="tab-bar">
         <button class="tab-item ${tab === 'entregas' ? 'active' : ''}" data-tab="entregas">${SVG_ICONS.fileText} Entregáveis</button>
@@ -1417,7 +1458,7 @@
         <div class="form-row">
           <div class="form-group">
             <label class="form-label">Código da Proposta</label>
-            <input type="text" class="form-input font-mono" name="codigo_proposta" placeholder="PPS-00001/2026">
+            <input type="text" class="form-input font-mono" name="codigo" placeholder="PPS-00001/2026" required>
           </div>
           <div class="form-group">
             <label class="form-label">Valor</label>
@@ -1455,8 +1496,8 @@
     const body = Object.fromEntries(formData);
     if (body.valor) body.valor = parseFloat(body.valor);
 
-    if (!body.titulo || !body.cliente_id) {
-      showToast('Preencha título e cliente.', 'warning');
+    if (!body.titulo || !body.cliente_id || !body.codigo) {
+      showToast('Preencha título, cliente e código da proposta.', 'warning');
       return;
     }
 
