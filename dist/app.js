@@ -722,12 +722,31 @@
     `;
   }
 
+  // Helper to process and set current project data with download URLs
+  function setCurrentProject(data) {
+    if (data) {
+      const entregas = data.entregaveis || data.entregas || data.deliverables || [];
+      const uploads = data.uploads || [];
+      entregas.forEach(e => {
+        if (!e.url && e.id) {
+          e.url = `/api/entregaveis/${e.id}/download`;
+        }
+      });
+      uploads.forEach(u => {
+        if (!u.url && u.id) {
+          u.url = `/api/uploads/${u.id}`;
+        }
+      });
+    }
+    state.currentProject = data;
+  }
+
   // — PROJECT DETAIL ————————————————————————————————————————————
   async function renderProjectDetail(params) {
     const data = await api.get(`/projetos/${params.id}`);
     if (!data) return renderEmpty('Projeto não encontrado.');
 
-    state.currentProject = data;
+    setCurrentProject(data);
     const p = data.projeto || data;
     const code = p.codigo || p.codigo_proposta || p.code || '—';
     const title = p.titulo || p.title || 'Sem título';
@@ -1185,7 +1204,7 @@
         setTimeout(async () => {
           const data = await api.get(`/projetos/${projectId}`);
           if (data) {
-            state.currentProject = data;
+            setCurrentProject(data);
             const tabContent = document.getElementById('tab-content');
             if (tabContent && state.currentTab === 'uploads') {
               tabContent.innerHTML = await renderTabContent('uploads', projectId);
