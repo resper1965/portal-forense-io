@@ -585,6 +585,9 @@
 
       <!-- Footer settings / logout links -->
       <div class="sidebar-footer-links">
+        <a href="/enviar-proposta-SKILL.md" target="_blank" class="sidebar-footer-link">
+          ${SVG_ICONS.fileText} Documentação (Skill)
+        </a>
         <a href="javascript:void(0)" onclick="showToast('Configurações do sistema.', 'info')" class="sidebar-footer-link">
           ${SVG_ICONS.settings} Configurações
         </a>
