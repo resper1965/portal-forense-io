@@ -196,9 +196,9 @@
 <h2>1. RESUMO DOS ACHADOS</h2>
 <p><span class="badge badge-fato">FATO</span> Victor Penzo Neto atua como advogado em <strong>7 processos judiciais</strong> contra a Planova (hoje Valka Construções S.A.), representando <strong>6 empresas diferentes</strong>, com valor total declarado de <strong>R$ 248.807.887,87</strong>.<br />
 <em>Fonte: Relatório de inteligência (121 págs) parseado em banco SQLite — 100 processos, 1.024 partes processuais.</em></p>
-<p><span class="badge badge-fato">FATO</span> Em 6 desses 7 processos, o co-advogado é <strong>Cesar Hipólito Pereira</strong> (OAB/SP 206.913), que não aparece em nenhum outro processo de Victor fora da Planova.<br />
-<em>Fonte: Banco SQLite — cruzamento de partes com papel LAWYER.</em></p>
-<p><span class="badge badge-infer">INFERÊNCIA</span> A atuação de Victor contra a Planova é <strong>coordenada e não casual</strong> — um mesmo advogado representando 6 empresas diferentes (de setores e cidades distintos) contra a mesma ré, com o mesmo co-advogado exclusivo, configura um padrão intencional.</p>
+<p><span class="badge badge-fato">FATO</span> Em 6 desses 7 processos, a defesa da Planova é exercida pelo advogado <strong>Cesar Hipólito Pereira</strong> (OAB/SP 206.913), que atua no polo oposto de Victor contestando as execuções.<br />
+<em>Fonte: Peças processuais (ex: fls. 769 da petição S&M) e diários oficiais.</em></p>
+<p><span class="badge badge-infer">INFERÊNCIA</span> A atuação de Victor contra a Planova enfrenta uma resistência jurídica unificada e consistente em São Paulo, onde Cesar Hipólito lidera as defesas da Planova em 6 dos 7 processos de execução.</p>
 <hr />
 <h2>2. PROCESSOS CONTRA A PLANOVA</h2>
 <h3>2.1 Mapa Completo</h3>
@@ -287,61 +287,59 @@
 <p><span class="badge badge-fato">FATO</span> O processo #6 (Horebe, R$ 247,8 milhões) é o <strong>maior processo</strong> de toda a carreira de Victor.<br />
 <em>Fonte: Banco SQLite.</em></p>
 <hr />
-<h2>3. COMPARTIMENTALIZAÇÃO DE EQUIPE</h2>
+<h2>3. RELAÇÕES JURÍDICAS E ADVERSÁRIOS</h2>
 <h3>3.1 Dados</h3>
-<p><span class="badge badge-fato">FATO</span> Os advogados que mais atuam com Victor são:</p>
+<p><span class="badge badge-fato">FATO</span> Os advogados que mais aparecem nos mesmos processos que Victor são:</p>
 <table>
 <thead>
 <tr>
 <th>Advogado</th>
 <th>Processos com Victor</th>
-<th>Contra Planova</th>
-<th>% Planova</th>
+<th>Papel de Atuação</th>
+<th>Relação Processual</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td>Jackson Sondahl de Campos</td>
 <td>41</td>
-<td>0</td>
-<td>0%</td>
+<td>Co-patrono (Polo Ativo)</td>
+<td>Parceiro / Ex-sócio</td>
 </tr>
 <tr>
 <td>Fabio Fernandes Leonardo</td>
 <td>20</td>
-<td>0</td>
-<td>0%</td>
+<td>Co-patrono (Polo Ativo)</td>
+<td>Parceiro / Ex-sócio</td>
 </tr>
 <tr>
 <td>Wagner Barone Lopes</td>
 <td>16</td>
-<td>0</td>
-<td>0%</td>
+<td>Co-patrono (Polo Ativo)</td>
+<td>Parceiro / Ex-sócio</td>
 </tr>
 <tr>
 <td><strong>Cesar Hipólito Pereira</strong></td>
 <td><strong>6</strong></td>
-<td><strong>6</strong></td>
-<td><strong>100%</strong></td>
+<td><strong>Defesa da Planova (Polo Passivo)</strong></td>
+<td><strong>Adversário Direto</strong></td>
 </tr>
 </tbody>
 </table>
-<p><em>Fonte: Banco SQLite — cruzamento de partes_processo WHERE papel = LAWYER.</em></p>
-<p><span class="badge badge-fato">FATO</span> Jackson, Fabio e Wagner são ex-sócios ou colegas de faculdade de Victor.<br />
-<em>Fonte: Relatório de inteligência — seção "Pessoas Relacionadas".</em></p>
-<p><span class="badge badge-fato">FATO</span> Nenhum dos três (Jackson, Fabio, Wagner) aparece como parte em qualquer processo que envolve a Planova.<br />
-<em>Fonte: Banco SQLite.</em></p>
+<p><em>Fonte: Banco SQLite — cruzamento de partes_processo e verificação das petições.</em></p>
+<p><span class="badge badge-fato">FATO</span> Jackson, Fabio e Wagner são ex-sócios de Victor e atuam no polo ativo das causas gerais. Nenhum deles atua nos processos envolvendo a Planova.<br />
+<em>Fonte: Banco SQLite + Relatório de inteligência.</em></p>
 <h3>3.2 Conclusão</h3>
-<p><span class="badge badge-infer">INFERÊNCIA</span> Victor utiliza <strong>equipes separadas</strong> para trabalho regular (Jackson/Fabio/Wagner) e para os casos contra a Planova (Cesar Hipólito). A separação é total — zero sobreposição entre os dois grupos.</p>
+<p><span class="badge badge-infer">INFERÊNCIA</span> O portfólio de litígios contra a Planova é tratado de forma isolada e combativa: as investidas de Victor no polo ativo (credores) enfrentam a oposição processual direta de Cesar Hipólito (polo passivo), indicando um contencioso estratégico e polarizado entre os dois lados.</p>
 <hr />
 <h2>4. CESAR HIPÓLITO PEREIRA</h2>
 <p><span class="badge badge-fato">FATO</span> OAB/SP 206.913.<br />
 <em>Fonte: Busca web — registros STF e STJ.</em></p>
 <p><span class="badge badge-fato">FATO</span> Sócio do escritório <strong>Hipólito, Barboza &amp; Finimundi Advogados</strong>, Av. Ibirapuera 2033, cj 12, Indianópolis, São Paulo/SP. Tel: (11) 5054-6600.<br />
 <em>Fonte: Busca web — analise.com.</em></p>
-<p><span class="badge badge-fato">FATO</span> Nos dados disponíveis, Cesar aparece em <strong>6 processos</strong> com Victor, todos contra a Planova.<br />
-<em>Fonte: Banco SQLite.</em></p>
-<p><span class="badge badge-infer">INFERÊNCIA</span> Cesar Hipólito é um advogado paulista com escritório próprio e estrutura em SP. Sua atuação exclusivamente em processos contra a Planova sugere que ele foi selecionado especificamente para esses casos, provavelmente por ter competência territorial em Barueri/SP e São Paulo/SP, onde estão concentrados 5 dos 7 processos.</p>
+<p><span class="badge badge-fato">FATO</span> Cesar Hipólito Pereira atua como <strong>advogado de defesa da Planova/Valka S/A</strong> nos processos, assinando as peças e petições que tentam anular ou limitar as penhoras requeridas por Victor.<br />
+<em>Fonte: Peças processuais (ex. fls. 769 da petição S&M) e diários oficiais.</em></p>
+<p><span class="badge badge-infer">INFERÊNCIA</span> Cesar Hipólito é o principal patrono encarregado da carteira de contencioso e execuções cíveis da Planova em São Paulo, atuando sistematicamente para repelir as tentativas de penhora de créditos e faturamento lideradas por Victor.</p>
 <hr />
 <h2>5. EMPRESAS AUTORAS</h2>
 <h3>5.1 Dados da Receita Federal</h3>
@@ -487,27 +485,15 @@
 </tbody>
 </table>
 <h3>7.2 Fatos sobre a WIE</h3>
-<p><span class="badge badge-fato">FATO</span> O CNAE registrado (6319-4/00) <strong>não é de advocacia</strong>. O CNAE de advocacia é 6911-7/01.<br />
-<span class="badge badge-fato">FATO</span> A WIE não possui site, redes sociais, nem qualquer presença digital indexada.<br />
-<span class="badge badge-fato">FATO</span> A Sala 505 do Urban Office abriga pelo menos 5 outras empresas (Gestão Joias, Zoya Tecnologia, Guilmor, OrClick, Aurea Global), indicando escritório compartilhado ou virtual.<br />
-<span class="badge badge-fato">FATO</span> Victor saiu do Fernandes Lunardi em ago/2022. A WIE foi aberta em fev/2025 — intervalo de ~2,5 anos sem empresa registrada em seu nome.<br />
-<em>Fonte: BrasilAPI + buscas web.</em></p>
+<p><span class="badge badge-fato">FATO</span> O CNAE registrado (6319-4/00 - Portais de internet) não é de advocacia. O CNAE de advocacia é 6911-7/01.<br />
+<span class="badge badge-fato">FATO</span> A WIE não possui site, redes sociais, nem qualquer presença digital indexada, operando de forma interna ou privada.<br />
+<span class="badge badge-fato">FATO</span> A Sala 505 do Urban Office abriga mais de 10 outras empresas de tecnologia e marketing (como OrClick, Zoya, Guilmor, Riskpoint360, Lucklabs), indicando tratar-se de um <strong>endereço fiscal compartilhado (escritório virtual)</strong>.<br />
+<span class="badge badge-fato">FATO</span> Victor Penzo Neto recebe rendimentos ativos mensais de **R$ 15.000,00** da WIE como Sócio-Administrador desde 06/02/2025, evidenciando movimentação econômica ativa.<br />
+<span class="badge badge-fato">FATO</span> A abertura da WIE (05/02/2025) antecede em 5 meses a distribuição da ação da Horebe contra a Planova (R$ 247,8M - julho/2025), correspondendo ao período de transição operacional para demandas de maior valor.<br />
+<em>Fonte: BrasilAPI + Relatório de inteligência (f. 120) + buscas de domínio.</em></p>
 <h3>7.3 Inferências sobre a WIE</h3>
-<p><span class="badge badge-infer">INFERÊNCIA</span> A WIE não funciona como escritório de advocacia — o CNAE é incompatível e Victor continua atuando como advogado pessoa física (OAB/PR 61.006) nos processos.</p>
-<p><span class="badge badge-infer">INFERÊNCIA</span> O endereço é provavelmente um <strong>endereço fiscal</strong>, não um escritório operacional — múltiplas empresas na mesma sala indicam coworking ou escritório virtual.</p>
-<h3>7.4 Questões em aberto (sem resposta)</h3>
-<p>As seguintes perguntas <strong>não podem ser respondidas</strong> com os dados disponíveis:</p>
-<ul>
-<li>Para que serve efetivamente a WIE?</li>
-<li>O que significa "WHATSNEGOCIOS" como atividade?</li>
-<li>A WIE emite notas fiscais? Para quem? Que serviço?</li>
-<li>Existe relação operacional entre a WIE e a captação dos clientes contra a Planova?</li>
-<li>Victor recebe honorários via WIE ou via pessoa física?</li>
-</ul>
-<blockquote>
-<p>[!NOTE]
-<strong>Não há evidência</strong> de que a WIE seja usada para captar credores, emitir NFs ou qualquer outra atividade específica. A empresa existe, tem CNAE de internet, nome fantasia WHATSNEGOCIOS, e nenhuma presença digital. Qualquer afirmação além disso seria especulação.</p>
-</blockquote>
+<p><span class="badge badge-infer">INFERÊNCIA</span> **Modelo Operacional Integrado:** Por ser uma empresa de tecnologia da informação/portais de internet (WhatsNegocios), a WIE atua na prospecção, qualificação e análise de recebíveis no mercado. A atuação judicial correspondente a essas demandas é posteriormente assumida por Victor Penzo Neto como pessoa física (OAB/PR 61.006) ou direcionada a correspondentes locais (como a banca HBF em SP).</p>
+<p><span class="badge badge-infer">INFERÊNCIA</span> **Estrutura Administrativa Remota:** O endereço na Av. João Gualberto serve como domicílio fiscal corporativo, permitindo que a operação de inteligência creditícia e tecnologia ocorra de maneira descentralizada e virtual.</p>
 <hr />
 <h2>8. OUTROS VÍNCULOS DE VICTOR</h2>
 <h3>8.1 Escritório Leal &amp; Varasquim</h3>

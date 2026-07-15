@@ -6,7 +6,8 @@
     "dev": "wrangler pages dev dist",
     "deploy": "wrangler pages deploy dist",
     "db:migrate": "wrangler d1 execute forense-db --file=migrations/0001_initial.sql",
-    "db:migrate:local": "wrangler d1 execute forense-db --file=migrations/0001_initial.sql --local"
+    "db:migrate:local": "wrangler d1 execute forense-db --file=migrations/0001_initial.sql --local",
+    "db:seed:planova": "node scripts/seed-planova.js"
   },
   "devDependencies": {
     "wrangler": "^4.0.0"

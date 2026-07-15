@@ -73,7 +73,7 @@ VALUES (
 );
 
 -- 4. Insert Timeline Milestones
-INSERT INTO timeline (id, projeto_id, tipo, titulo, descricao, visivel_cliente, autor)
+INSERT OR IGNORE INTO timeline (id, projeto_id, tipo, titulo, descricao, visivel_cliente, autor)
 VALUES (
   't1_5f9630ec8b7c4a1eb4098bb36c310fb4',
   '5f9630ec8b7c4a1eb4098bb36c310fb4',
@@ -84,7 +84,7 @@ VALUES (
   'resper@ness.com.br'
 );
 
-INSERT INTO timeline (id, projeto_id, tipo, titulo, descricao, visivel_cliente, autor)
+INSERT OR IGNORE INTO timeline (id, projeto_id, tipo, titulo, descricao, visivel_cliente, autor)
 VALUES (
   't2_5f9630ec8b7c4a1eb4098bb36c310fb4',
   '5f9630ec8b7c4a1eb4098bb36c310fb4',
@@ -95,7 +95,7 @@ VALUES (
   'resper@ness.com.br'
 );
 
-INSERT INTO timeline (id, projeto_id, tipo, titulo, descricao, visivel_cliente, autor)
+INSERT OR IGNORE INTO timeline (id, projeto_id, tipo, titulo, descricao, visivel_cliente, autor)
 VALUES (
   't3_5f9630ec8b7c4a1eb4098bb36c310fb4',
   '5f9630ec8b7c4a1eb4098bb36c310fb4',
@@ -106,7 +106,7 @@ VALUES (
   'resper@ness.com.br'
 );
 
-INSERT INTO timeline (id, projeto_id, tipo, titulo, descricao, visivel_cliente, autor)
+INSERT OR IGNORE INTO timeline (id, projeto_id, tipo, titulo, descricao, visivel_cliente, autor)
 VALUES (
   't4_5f9630ec8b7c4a1eb4098bb36c310fb4',
   '5f9630ec8b7c4a1eb4098bb36c310fb4',
