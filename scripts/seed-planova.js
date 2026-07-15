@@ -23,6 +23,7 @@ function main() {
   // 1. Rodar Migrações e seed.sql
   console.log('1. Migrando e Seeding do Banco D1 Local...');
   runCmd('npx wrangler d1 execute forense-db --file=migrations/0001_initial.sql --local');
+  runCmd('npx wrangler d1 execute forense-db --file=migrations/0002_rbac_crud.sql --local');
   runCmd('npx wrangler d1 execute forense-db --file=seed.sql --local');
 
   // 2. Upload dos entregáveis da pasta dist para R2 local

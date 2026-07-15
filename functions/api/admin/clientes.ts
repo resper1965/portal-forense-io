@@ -29,12 +29,18 @@ export const onRequestGet: PagesFunction<Env, string, UserContext> = async (cont
 export const onRequestPost: PagesFunction<Env, string, UserContext> = async (context) => {
   const { request, env } = context;
 
+  let data;
   try {
-    const data = await request.json<{
+    data = await request.json<{
       razao_social: string;
       cnpj?: string;
       notas?: string;
     }>();
+  } catch (err) {
+    return errorResponse('JSON inválido.', 400);
+  }
+
+  try {
 
     // Validate required fields
     if (!data.razao_social) {
@@ -81,14 +87,20 @@ export const onRequestPost: PagesFunction<Env, string, UserContext> = async (con
 export const onRequestPut: PagesFunction<Env, string, UserContext> = async (context) => {
   const { request, env } = context;
 
+  let body;
   try {
-    const body = await request.json<{
+    body = await request.json<{
       id: string;
       razao_social?: string;
       cnpj?: string;
       notas?: string;
       ativo?: number;
     }>();
+  } catch (err) {
+    return errorResponse('JSON inválido.', 400);
+  }
+
+  try {
 
     if (!body.id) {
       return errorResponse('Campo obrigatório: id.', 400);
@@ -165,6 +177,9 @@ export const onRequestDelete: PagesFunction<Env, string, UserContext> = async (c
     if (!cliente) {
       return errorResponse('Cliente não encontrado.', 404);
     }
+
+    // Enable foreign keys
+    await env.DB.prepare('PRAGMA foreign_keys = ON;').run();
 
     // Soft delete — set ativo=0
     await env.DB.prepare(

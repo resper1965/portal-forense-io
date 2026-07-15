@@ -28,8 +28,9 @@ export const onRequestPost: PagesFunction<Env, string, UserContext> = async (con
   const { request, env, data } = context;
   const userEmail = data.userEmail || 'sistema';
 
+  let body;
   try {
-    const body = await request.json<{
+    body = await request.json<{
       codigo_proposta: string;
       cliente_id: string;
       titulo: string;
@@ -39,6 +40,11 @@ export const onRequestPost: PagesFunction<Env, string, UserContext> = async (con
       data_inicio?: string;
       data_entrega?: string;
     }>();
+  } catch (err) {
+    return errorResponse('JSON inválido.', 400);
+  }
+
+  try {
 
     // Input validation
     if (!body.codigo_proposta || !body.cliente_id || !body.titulo) {
@@ -128,8 +134,9 @@ export const onRequestPut: PagesFunction<Env, string, UserContext> = async (cont
   const { request, env, data } = context;
   const userEmail = data.userEmail || 'sistema';
 
+  let body;
   try {
-    const body = await request.json<{
+    body = await request.json<{
       id: string;
       codigo_proposta?: string;
       cliente_id?: string;
@@ -141,6 +148,11 @@ export const onRequestPut: PagesFunction<Env, string, UserContext> = async (cont
       data_inicio?: string;
       data_entrega?: string;
     }>();
+  } catch (err) {
+    return errorResponse('JSON inválido.', 400);
+  }
+
+  try {
 
     if (!body.id) {
       return errorResponse('Campo obrigatório: id.', 400);
@@ -267,6 +279,9 @@ export const onRequestDelete: PagesFunction<Env, string, UserContext> = async (c
     )
       .bind(id)
       .all<{ r2_key: string }>();
+
+    // Enable foreign keys
+    await env.DB.prepare('PRAGMA foreign_keys = ON;').run();
 
     // Delete project (D1 cascades to timeline, responses, entregaveis, etc.)
     await env.DB.prepare('DELETE FROM projetos WHERE id = ?')

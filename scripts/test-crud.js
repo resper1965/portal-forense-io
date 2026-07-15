@@ -29,7 +29,7 @@ async function runTests() {
     body: JSON.stringify({
       razao_social: "Test Company S.A.",
       cnpj: "88.888.888/0001-88",
-      notes: "Initial client notes"
+      notas: "Initial client notes"
     })
   });
   if (res.status !== 201) throw new Error(`Expected 201 on client create, got ${res.status}`);

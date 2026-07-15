@@ -84,7 +84,7 @@ export const onRequest: PagesFunction<Env, any, UserContext & { user?: any }> = 
     } else {
       // 2. Check if Client Contact
       const contact = await env.DB.prepare(
-        'SELECT id, cliente_id, nome, email FROM contatos_cliente WHERE email = ? AND ativo = 1'
+        'SELECT cc.id, cc.cliente_id, cc.nome, cc.email FROM contatos_cliente cc JOIN clientes c ON cc.cliente_id = c.id WHERE cc.email = ? AND cc.ativo = 1 AND c.ativo = 1'
       )
         .bind(userEmail)
         .first<{ id: string; cliente_id: string; nome: string; email: string }>();

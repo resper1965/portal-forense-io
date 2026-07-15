@@ -20,17 +20,11 @@ function runCmd(cmd) {
 function main() {
   console.log('=== Iniciando Seeding do Cliente Planova (PRODUÇÃO / REMOTO) ===\n');
 
-  // 1. Limpar entregáveis antigos e atualizar o status do projeto no D1 Remoto
-  console.log('1. Limpando entregáveis antigos e atualizando status do projeto no D1 Remoto...');
-  const cleanCmd = `DELETE FROM entregaveis WHERE projeto_id = '${PROJECT_ID}'; ` +
-                    `UPDATE projetos SET status = 'em_andamento', titulo = 'Mapeamento de Riscos & OSINT — Alvo: Victor Penzo Neto', ` +
-                    `descricao = 'Investigação de exposição digital, rede de conexões e histórico processual do advogado adverso Victor Penzo Neto (OAB/PR 61.006) contra a Planova/Valka S/A. Repositório de governança no GitHub: https://github.com/forense-io/PPS-01711-2026' ` +
-                    `WHERE id = '${PROJECT_ID}';`;
-  
-  const tempSqlFile = path.join(__dirname, 'temp_clean.sql');
-  fs.writeFileSync(tempSqlFile, cleanCmd);
-  runCmd(`npx wrangler d1 execute forense-db --file="${tempSqlFile}" --remote`);
-  fs.unlinkSync(tempSqlFile);
+  // 1. Rodar Migrações e seed.sql Remoto
+  console.log('1. Migrando e Seeding do Banco D1 Remoto...');
+  runCmd('npx wrangler d1 execute forense-db --file=migrations/0001_initial.sql --remote');
+  runCmd('npx wrangler d1 execute forense-db --file=migrations/0002_rbac_crud.sql --remote');
+  runCmd('npx wrangler d1 execute forense-db --file=seed.sql --remote');
 
   // 2. Upload dos entregáveis da pasta dist para o R2 Remoto
   console.log('\n2. Fazendo upload dos entregáveis (dist/) para o R2 Remoto...');
