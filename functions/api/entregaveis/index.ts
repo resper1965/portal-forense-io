@@ -15,7 +15,8 @@ async function verifyProjetoAccess(
   const row = await env.DB.prepare(
     `SELECT 1 FROM projetos p
      JOIN contatos_cliente cc ON p.cliente_id = cc.cliente_id
-     WHERE p.id = ? AND cc.email = ? AND cc.ativo = 1`
+     JOIN clientes c ON cc.cliente_id = c.id
+     WHERE p.id = ? AND cc.email = ? AND cc.ativo = 1 AND c.ativo = 1`
   )
     .bind(projetoId, userEmail)
     .first();

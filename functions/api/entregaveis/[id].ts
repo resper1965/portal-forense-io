@@ -30,9 +30,11 @@ async function getEntregavelWithAccess(
     return { allowed: true, entregavel, clienteEmail: entregavel.cliente_email as string };
   }
 
-  // Client: must be an active contact of the project's client
+  // Client: must be an active contact of an active client
   const contact = await env.DB.prepare(
-    'SELECT id FROM contatos_cliente WHERE cliente_id = ? AND email = ? AND ativo = 1'
+    `SELECT cc.id FROM contatos_cliente cc
+     JOIN clientes c ON cc.cliente_id = c.id
+     WHERE cc.cliente_id = ? AND cc.email = ? AND cc.ativo = 1 AND c.ativo = 1`
   )
     .bind(entregavel.cliente_id, userEmail)
     .first();

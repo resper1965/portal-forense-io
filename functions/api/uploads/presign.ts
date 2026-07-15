@@ -42,12 +42,13 @@ export const onRequestPost: PagesFunction<Env, string, UserContext> = async (con
       return errorResponse('Verificação Turnstile falhou. Tente novamente.', 403);
     }
 
-    // 2. Verify client has access to the project
+    // 2. Verify client has access to the project (contact and client must be active)
     const projeto = await env.DB.prepare(
       `SELECT p.id, p.codigo_proposta AS codigo, cc.email AS cliente_email
        FROM projetos p
        JOIN contatos_cliente cc ON p.cliente_id = cc.cliente_id
-       WHERE p.id = ? AND cc.email = ? AND cc.ativo = 1`
+       JOIN clientes c ON cc.cliente_id = c.id
+       WHERE p.id = ? AND cc.email = ? AND cc.ativo = 1 AND c.ativo = 1`
     )
       .bind(body.projeto_id, userEmail)
       .first<{ id: string; codigo: string; cliente_email: string }>();

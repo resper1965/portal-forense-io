@@ -1,8 +1,9 @@
--- Drop existing tables to recreate with clean relations
+DROP TABLE IF EXISTS respostas_questionario;
 DROP TABLE IF EXISTS timeline;
-DROP TABLE IF EXISTS entregaveis;
 DROP TABLE IF EXISTS uploads;
+DROP TABLE IF EXISTS entregaveis;
 DROP TABLE IF EXISTS projetos;
+DROP TABLE IF EXISTS contatos_cliente;
 DROP TABLE IF EXISTS clientes;
 
 -- 1. Clientes (Accounts)

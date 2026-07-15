@@ -36,9 +36,11 @@ export const onRequestPost: PagesFunction<Env, string, UserContext> = async (con
       return errorResponse('Proposta/Projeto não encontrado.', 404);
     }
 
-    // 2. Access control: only an active contact of the client owner can decide
+    // 2. Access control: only an active contact of an active client owner can decide
     const contact = await env.DB.prepare(
-      'SELECT id FROM contatos_cliente WHERE cliente_id = ? AND email = ? AND ativo = 1'
+      `SELECT cc.id FROM contatos_cliente cc
+       JOIN clientes c ON cc.cliente_id = c.id
+       WHERE cc.cliente_id = ? AND cc.email = ? AND cc.ativo = 1 AND c.ativo = 1`
     )
       .bind(projeto.cliente_id, userEmail)
       .first();

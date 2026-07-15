@@ -28,9 +28,11 @@ async function verifyProjectAccess(
     return { allowed: true, projeto };
   }
 
-  // Client can only access their own projects - user must be an active contact of this client
+  // Client can only access their own projects - user must be an active contact of an active client
   const contact = await env.DB.prepare(
-    'SELECT id FROM contatos_cliente WHERE cliente_id = ? AND email = ? AND ativo = 1'
+    `SELECT cc.id FROM contatos_cliente cc
+     JOIN clientes c ON cc.cliente_id = c.id
+     WHERE cc.cliente_id = ? AND cc.email = ? AND cc.ativo = 1 AND c.ativo = 1`
   )
     .bind(projeto.cliente_id, userEmail)
     .first();
@@ -230,6 +232,9 @@ export const onRequestDelete: PagesFunction<Env, string, UserContext> = async (c
     )
       .bind(projetoId)
       .all<{ r2_key: string }>();
+
+    // Enable foreign keys cascade for SQLite/D1
+    await env.DB.prepare('PRAGMA foreign_keys = ON;').run();
 
     // Delete from D1 (cascades to entregaveis, uploads, timeline)
     await env.DB.prepare('DELETE FROM projetos WHERE id = ?')

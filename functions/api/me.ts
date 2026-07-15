@@ -12,27 +12,25 @@ export const onRequestGet: PagesFunction<Env, string, UserContext> = async (cont
   const { userEmail, isAdmin } = data;
 
   try {
-    // Check if user is a registered client
-    const cliente = await env.DB.prepare(
-      `SELECT c.id, c.nome, c.empresa, c.email, c.telefone, c.notas, c.ativo,
+    // Check if user is a registered client contact
+    const contactProfile = await env.DB.prepare(
+      `SELECT cc.nome, cc.email, cc.cliente_id, c.razao_social AS empresa,
               (SELECT COUNT(*) FROM projetos p WHERE p.cliente_id = c.id) AS projetos_count
-       FROM clientes c
-       WHERE c.email = ? AND c.ativo = 1`
+       FROM contatos_cliente cc
+       JOIN clientes c ON cc.cliente_id = c.id
+       WHERE cc.email = ? AND cc.ativo = 1 AND c.ativo = 1`
     )
       .bind(userEmail)
       .first<{
-        id: string;
         nome: string;
-        empresa: string;
         email: string;
-        telefone: string;
-        notas: string;
-        ativo: number;
+        cliente_id: string;
+        empresa: string;
         projetos_count: number;
       }>();
 
     if (isAdmin) {
-      // Admin user — may also be a client
+      // Admin user — may also be a client contact
       const adminRow = await env.DB.prepare(
         'SELECT email, nome, role FROM admins WHERE email = ? AND ativo = 1'
       )
@@ -41,23 +39,23 @@ export const onRequestGet: PagesFunction<Env, string, UserContext> = async (cont
 
       return jsonResponse({
         email: userEmail,
-        nome: adminRow?.nome || cliente?.nome || userEmail.split('@')[0],
-        empresa: cliente?.empresa || 'ness.',
+        nome: adminRow?.nome || contactProfile?.nome || userEmail.split('@')[0],
+        empresa: contactProfile?.empresa || 'ness.',
         isAdmin: true,
         role: adminRow?.role || 'admin',
-        projetos_count: cliente?.projetos_count || 0,
-        cliente_id: cliente?.id || null,
+        projetos_count: contactProfile?.projetos_count || 0,
+        cliente_id: contactProfile?.cliente_id || null,
       });
     }
 
-    if (cliente) {
+    if (contactProfile) {
       return jsonResponse({
-        email: cliente.email,
-        nome: cliente.nome,
-        empresa: cliente.empresa,
+        email: contactProfile.email,
+        nome: contactProfile.nome,
+        empresa: contactProfile.empresa,
         isAdmin: false,
-        projetos_count: cliente.projetos_count,
-        cliente_id: cliente.id,
+        projetos_count: contactProfile.projetos_count,
+        cliente_id: contactProfile.cliente_id,
       });
     }
 
@@ -101,15 +99,17 @@ export const onRequestPut: PagesFunction<Env, string, UserContext> = async (cont
         .run();
     }
 
-    // Update in clientes table if client
-    const clienteExists = await env.DB.prepare(
-      'SELECT id FROM clientes WHERE email = ? AND ativo = 1'
+    // Update in contatos_cliente table if contact exists (and both contact and client are active)
+    const contactExists = await env.DB.prepare(
+      `SELECT cc.id FROM contatos_cliente cc
+       JOIN clientes c ON cc.cliente_id = c.id
+       WHERE cc.email = ? AND cc.ativo = 1 AND c.ativo = 1`
     )
       .bind(userEmail)
       .first<{ id: string }>();
 
-    if (clienteExists) {
-      await env.DB.prepare('UPDATE clientes SET nome = ? WHERE email = ?')
+    if (contactExists) {
+      await env.DB.prepare('UPDATE contatos_cliente SET nome = ? WHERE email = ?')
         .bind(nome, userEmail)
         .run();
     }
