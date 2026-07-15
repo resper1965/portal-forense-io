@@ -15,10 +15,9 @@ export const onRequestGet: PagesFunction<Env, string, UserContext> = async (cont
   try {
     // Fetch entregável with project and client info
     const entregavel = await env.DB.prepare(
-      `SELECT e.*, c.email AS cliente_email
+      `SELECT e.*, p.cliente_id
        FROM entregaveis e
        JOIN projetos p ON e.projeto_id = p.id
-       JOIN clientes c ON p.cliente_id = c.id
        WHERE e.id = ?`
     )
       .bind(entregavelId)
@@ -29,7 +28,7 @@ export const onRequestGet: PagesFunction<Env, string, UserContext> = async (cont
         titulo: string;
         tamanho: number;
         publicado: number;
-        cliente_email: string;
+        cliente_id: string;
       }>();
 
     if (!entregavel) {
@@ -38,8 +37,15 @@ export const onRequestGet: PagesFunction<Env, string, UserContext> = async (cont
 
     // Access control
     if (!isAdmin) {
-      const emailMatch = entregavel.cliente_email?.toLowerCase() === userEmail.toLowerCase();
-      if (!emailMatch || entregavel.publicado !== 1) {
+      const hasAccess = await env.DB.prepare(
+        `SELECT 1 FROM contatos_cliente cc
+         JOIN clientes c ON cc.cliente_id = c.id
+         WHERE cc.cliente_id = ? AND cc.email = ? AND cc.ativo = 1 AND c.ativo = 1`
+      )
+        .bind(entregavel.cliente_id, userEmail)
+        .first();
+
+      if (!hasAccess || entregavel.publicado !== 1) {
         return errorResponse('Acesso negado a este entregável.', 403);
       }
     }

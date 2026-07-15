@@ -24,7 +24,8 @@ export const onRequestGet: PagesFunction<Env, string, UserContext> = async (cont
       const hasAccess = await env.DB.prepare(
         `SELECT 1 FROM projetos p
          JOIN clientes c ON p.cliente_id = c.id
-         WHERE p.id = ? AND c.email = ?`
+         JOIN contatos_cliente cc ON cc.cliente_id = c.id
+         WHERE p.id = ? AND cc.email = ? AND cc.ativo = 1 AND c.ativo = 1`
       )
         .bind(projetoId, userEmail)
         .first();

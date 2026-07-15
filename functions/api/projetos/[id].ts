@@ -233,13 +233,11 @@ export const onRequestDelete: PagesFunction<Env, string, UserContext> = async (c
       .bind(projetoId)
       .all<{ r2_key: string }>();
 
-    // Enable foreign keys cascade for SQLite/D1
-    await env.DB.prepare('PRAGMA foreign_keys = ON;').run();
-
-    // Delete from D1 (cascades to entregaveis, uploads, timeline)
-    await env.DB.prepare('DELETE FROM projetos WHERE id = ?')
-      .bind(projetoId)
-      .run();
+    // Enable foreign keys and delete in a single batch execution to ensure cascade happens
+    await env.DB.batch([
+      env.DB.prepare('PRAGMA foreign_keys = ON;'),
+      env.DB.prepare('DELETE FROM projetos WHERE id = ?').bind(projetoId)
+    ]);
 
     // Clean up R2 objects (non-blocking)
     const allKeys = [

@@ -280,13 +280,11 @@ export const onRequestDelete: PagesFunction<Env, string, UserContext> = async (c
       .bind(id)
       .all<{ r2_key: string }>();
 
-    // Enable foreign keys
-    await env.DB.prepare('PRAGMA foreign_keys = ON;').run();
-
-    // Delete project (D1 cascades to timeline, responses, entregaveis, etc.)
-    await env.DB.prepare('DELETE FROM projetos WHERE id = ?')
-      .bind(id)
-      .run();
+    // Enable foreign keys and delete in a single batch execution to ensure cascade happens
+    await env.DB.batch([
+      env.DB.prepare('PRAGMA foreign_keys = ON;'),
+      env.DB.prepare('DELETE FROM projetos WHERE id = ?').bind(id)
+    ]);
 
     // Clean up R2
     const allKeys = [

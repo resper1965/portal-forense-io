@@ -15,10 +15,9 @@ export const onRequestGet: PagesFunction<Env, string, UserContext> = async (cont
   try {
     // Fetch upload with project and client info
     const upload = await env.DB.prepare(
-      `SELECT u.*, c.email AS projeto_cliente_email
+      `SELECT u.*, p.cliente_id
        FROM uploads u
        JOIN projetos p ON u.projeto_id = p.id
-       JOIN clientes c ON p.cliente_id = c.id
        WHERE u.id = ?`
     )
       .bind(uploadId)
@@ -28,17 +27,24 @@ export const onRequestGet: PagesFunction<Env, string, UserContext> = async (cont
         nome_original: string;
         mime_type: string;
         tamanho: number;
-        projeto_cliente_email: string;
+        cliente_id: string;
       }>();
 
     if (!upload) {
       return errorResponse('Upload não encontrado.', 404);
     }
 
-    // Access control: admin or project owner
+    // Access control: admin or project client active contact
     if (!isAdmin) {
-      const isProjectOwner = upload.projeto_cliente_email?.toLowerCase() === userEmail.toLowerCase();
-      if (!isProjectOwner) {
+      const hasAccess = await env.DB.prepare(
+        `SELECT 1 FROM contatos_cliente cc
+         JOIN clientes c ON cc.cliente_id = c.id
+         WHERE cc.cliente_id = ? AND cc.email = ? AND cc.ativo = 1 AND c.ativo = 1`
+      )
+        .bind(upload.cliente_id, userEmail)
+        .first();
+
+      if (!hasAccess) {
         return errorResponse('Acesso negado a este upload.', 403);
       }
     }

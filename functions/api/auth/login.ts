@@ -34,7 +34,9 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
       .first();
 
     const isClient = await env.DB.prepare(
-      'SELECT email FROM clientes WHERE email = ? AND ativo = 1'
+      `SELECT cc.email FROM contatos_cliente cc
+       JOIN clientes c ON cc.cliente_id = c.id
+       WHERE cc.email = ? AND cc.ativo = 1 AND c.ativo = 1`
     )
       .bind(email)
       .first();
