@@ -40,14 +40,20 @@ export const onRequest: PagesFunction<Env, any, UserContext & { user?: any }> = 
       }
       // Simplified session representation for dev fallback
       if (!userEmail) {
-        userEmail = decodeURIComponent(sessionId);
+        const isLocalDev = url.hostname === 'localhost' || url.hostname === '127.0.0.1';
+        if (isLocalDev) {
+          userEmail = decodeURIComponent(sessionId);
+        }
       }
     }
   }
 
-  // 3. Dev fallback: allow X-Dev-Email header
+  // 3. Dev fallback: allow X-Dev-Email header (local dev only)
   if (!userEmail) {
-    userEmail = request.headers.get('X-Dev-Email');
+    const isLocalDev = url.hostname === 'localhost' || url.hostname === '127.0.0.1';
+    if (isLocalDev) {
+      userEmail = request.headers.get('X-Dev-Email');
+    }
   }
 
   if (!userEmail) {
@@ -57,7 +63,7 @@ export const onRequest: PagesFunction<Env, any, UserContext & { user?: any }> = 
   // Normalize email
   userEmail = userEmail.toLowerCase().trim();
 
-  let userRole = 'cliente';
+  let userRole: string | null = null;
   let clienteId = null;
   let isAdmin = false;
   let userName: string | undefined;
@@ -91,7 +97,8 @@ export const onRequest: PagesFunction<Env, any, UserContext & { user?: any }> = 
       }
     }
   } catch (err) {
-    // If DB query fails, continue with default role
+    console.error('Erro na consulta de autenticação no banco de dados:', err);
+    return errorResponse('Internal Server Error', 500);
   }
 
   // Set legacy context properties for downstream compatibility
@@ -102,8 +109,8 @@ export const onRequest: PagesFunction<Env, any, UserContext & { user?: any }> = 
   }
 
   // Block client accesses to administrative paths
-  if (url.pathname.includes('/api/admin/') && userRole !== 'admin') {
-    return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403, headers: { 'Content-Type': 'application/json' } });
+  if (url.pathname.startsWith('/api/admin/') && userRole !== 'admin') {
+    return errorResponse('Forbidden', 403);
   }
 
   return next();
