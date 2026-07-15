@@ -5,7 +5,7 @@ import { jsonResponse, errorResponse } from '../../types';
  * GET /api/projetos — List projects.
  *
  * Admin: returns ALL projects with client info.
- * Client: returns only projects where the client's email matches.
+ * Client: returns only projects where the client's contact email matches.
  */
 export const onRequestGet: PagesFunction<Env, string, UserContext> = async (context) => {
   const { env, data } = context;
@@ -20,9 +20,8 @@ export const onRequestGet: PagesFunction<Env, string, UserContext> = async (cont
       query = `
         SELECT
           p.*,
-          c.nome AS cliente_nome,
-          c.empresa AS cliente_empresa,
-          c.email AS cliente_email,
+          c.razao_social AS cliente_nome,
+          c.cnpj AS cliente_cnpj,
           (SELECT COUNT(*) FROM entregaveis e WHERE e.projeto_id = p.id) AS entregaveis_count,
           (SELECT COUNT(*) FROM uploads u WHERE u.projeto_id = p.id) AS uploads_count
         FROM projetos p
@@ -35,14 +34,14 @@ export const onRequestGet: PagesFunction<Env, string, UserContext> = async (cont
       query = `
         SELECT
           p.*,
-          c.nome AS cliente_nome,
-          c.empresa AS cliente_empresa,
-          c.email AS cliente_email,
+          c.razao_social AS cliente_nome,
+          c.cnpj AS cliente_cnpj,
           (SELECT COUNT(*) FROM entregaveis e WHERE e.projeto_id = p.id AND e.publicado = 1) AS entregaveis_count,
           (SELECT COUNT(*) FROM uploads u WHERE u.projeto_id = p.id) AS uploads_count
         FROM projetos p
         JOIN clientes c ON p.cliente_id = c.id
-        WHERE c.email = ?
+        JOIN contatos_cliente cc ON cc.cliente_id = c.id
+        WHERE cc.email = ? AND cc.ativo = 1 AND c.ativo = 1
         ORDER BY p.created_at DESC
       `;
       params = [userEmail];
@@ -63,7 +62,7 @@ export const onRequestGet: PagesFunction<Env, string, UserContext> = async (cont
 /**
  * POST /api/projetos — Create a new project (admin only).
  *
- * Body: { codigo, cliente_id, titulo, descricao?, tipo?, valor?, data_inicio?, data_entrega? }
+ * Body: { codigo_proposta, cliente_id, titulo, descricao?, github_repo_url?, status?, valor?, data_inicio?, data_entrega? }
  */
 export const onRequestPost: PagesFunction<Env, string, UserContext> = async (context) => {
   const { request, env, data } = context;
@@ -75,11 +74,11 @@ export const onRequestPost: PagesFunction<Env, string, UserContext> = async (con
 
   try {
     const body = await request.json<{
-      codigo: string;
+      codigo_proposta: string;
       cliente_id: string;
       titulo: string;
       descricao?: string;
-      tipo?: string;
+      github_repo_url?: string;
       status?: string;
       valor?: number;
       data_inicio?: string;
@@ -87,8 +86,8 @@ export const onRequestPost: PagesFunction<Env, string, UserContext> = async (con
     }>();
 
     // Validate required fields
-    if (!body.codigo || !body.cliente_id || !body.titulo) {
-      return errorResponse('Campos obrigatórios: codigo, cliente_id, titulo.', 400);
+    if (!body.codigo_proposta || !body.cliente_id || !body.titulo) {
+      return errorResponse('Campos obrigatórios: codigo_proposta, cliente_id, titulo.', 400);
     }
 
     // Verify client exists
@@ -105,17 +104,17 @@ export const onRequestPost: PagesFunction<Env, string, UserContext> = async (con
 
     // Insert project
     await env.DB.prepare(
-      `INSERT INTO projetos (id, codigo, cliente_id, titulo, descricao, tipo, status, valor, data_inicio, data_entrega, created_at, updated_at)
+      `INSERT INTO projetos (id, codigo_proposta, cliente_id, titulo, descricao, github_repo_url, status, valor, data_inicio, data_entrega, created_at, updated_at)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     )
       .bind(
         projetoId,
-        body.codigo,
+        body.codigo_proposta,
         body.cliente_id,
         body.titulo,
         body.descricao || null,
-        body.tipo || 'inteligencia',
-        body.status || 'em_andamento',
+        body.github_repo_url || null,
+        body.status || 'proposta',
         body.valor || null,
         body.data_inicio || null,
         body.data_entrega || null,
@@ -131,7 +130,7 @@ export const onRequestPost: PagesFunction<Env, string, UserContext> = async (con
         `INSERT INTO timeline (id, projeto_id, tipo, titulo, descricao, visivel_cliente, autor, created_at)
          VALUES (?, ?, 'status', 'Projeto criado', ?, 1, ?, datetime('now'))`
       )
-        .bind(timelineId, projetoId, `Projeto ${body.codigo} criado por ${userEmail}`, userEmail)
+        .bind(timelineId, projetoId, `Projeto ${body.codigo_proposta} criado por ${userEmail}`, userEmail)
         .run()
         .catch(() => {})
     );
@@ -139,12 +138,12 @@ export const onRequestPost: PagesFunction<Env, string, UserContext> = async (con
     return jsonResponse(
       {
         id: projetoId,
-        codigo: body.codigo,
+        codigo_proposta: body.codigo_proposta,
         cliente_id: body.cliente_id,
         titulo: body.titulo,
         descricao: body.descricao || null,
-        tipo: body.tipo || 'inteligencia',
-        status: body.status || 'em_andamento',
+        github_repo_url: body.github_repo_url || null,
+        status: body.status || 'proposta',
         created_at: now,
       },
       201
@@ -152,7 +151,7 @@ export const onRequestPost: PagesFunction<Env, string, UserContext> = async (con
   } catch (err) {
     const message = (err as Error).message;
     if (message.includes('UNIQUE constraint')) {
-      return errorResponse('Já existe um projeto com este código.', 409);
+      return errorResponse('Já existe um projeto com este código de proposta.', 409);
     }
     return errorResponse(`Erro ao criar projeto: ${message}`, 500);
   }

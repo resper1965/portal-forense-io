@@ -12,7 +12,7 @@ async function verifyProjectAccess(
   isAdmin: boolean
 ): Promise<{ allowed: boolean; projeto: Record<string, unknown> | null }> {
   const projeto = await env.DB.prepare(
-    `SELECT p.*, c.email AS cliente_email, c.nome AS cliente_nome, c.empresa AS cliente_empresa
+    `SELECT p.*, c.razao_social AS cliente_nome, c.cnpj AS cliente_cnpj
      FROM projetos p
      JOIN clientes c ON p.cliente_id = c.id
      WHERE p.id = ?`
@@ -28,9 +28,15 @@ async function verifyProjectAccess(
     return { allowed: true, projeto };
   }
 
-  // Client can only access their own projects
+  // Client can only access their own projects - user must be an active contact of this client
+  const contact = await env.DB.prepare(
+    'SELECT id FROM contatos_cliente WHERE cliente_id = ? AND email = ? AND ativo = 1'
+  )
+    .bind(projeto.cliente_id, userEmail)
+    .first();
+
   return {
-    allowed: (projeto.cliente_email as string)?.toLowerCase() === userEmail.toLowerCase(),
+    allowed: !!contact,
     projeto,
   };
 }
@@ -119,8 +125,8 @@ export const onRequestPut: PagesFunction<Env, string, UserContext> = async (cont
 
     // Allowed fields for update
     const allowedFields = [
-      'codigo', 'titulo', 'descricao', 'tipo', 'status',
-      'valor', 'valor_pago', 'data_inicio', 'data_entrega', 'data_conclusao',
+      'codigo_proposta', 'titulo', 'descricao', 'github_repo_url', 'status',
+      'valor', 'data_inicio', 'data_entrega',
     ];
 
     const setClauses: string[] = [];
@@ -204,9 +210,9 @@ export const onRequestDelete: PagesFunction<Env, string, UserContext> = async (c
 
   try {
     // Check project exists
-    const projeto = await env.DB.prepare('SELECT id, codigo FROM projetos WHERE id = ?')
+    const projeto = await env.DB.prepare('SELECT id, codigo_proposta FROM projetos WHERE id = ?')
       .bind(projetoId)
-      .first<{ id: string; codigo: string }>();
+      .first<{ id: string; codigo_proposta: string }>();
 
     if (!projeto) {
       return errorResponse('Projeto não encontrado.', 404);
@@ -244,7 +250,7 @@ export const onRequestDelete: PagesFunction<Env, string, UserContext> = async (c
       );
     }
 
-    return jsonResponse({ deleted: true, codigo: projeto.codigo });
+    return jsonResponse({ deleted: true, codigo_proposta: projeto.codigo_proposta });
   } catch (err) {
     return errorResponse(`Erro ao excluir projeto: ${(err as Error).message}`, 500);
   }
