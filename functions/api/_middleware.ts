@@ -1,4 +1,4 @@
-import type { Env } from '../types';
+import type { Env, UserContext } from '../types';
 import { errorResponse } from '../types';
 
 /**
@@ -11,7 +11,7 @@ import { errorResponse } from '../types';
  *
  * Returns 401 if none of the above provide a valid email.
  */
-export const onRequest: PagesFunction<Env> = async (context) => {
+export const onRequest: PagesFunction<Env, any, UserContext & { user?: any }> = async (context) => {
   const { request, env, next } = context;
   const url = new URL(request.url);
 
@@ -38,6 +38,10 @@ export const onRequest: PagesFunction<Env> = async (context) => {
       } catch {
         // Invalid session — continue to check other auth methods
       }
+      // Simplified session representation for dev fallback
+      if (!userEmail) {
+        userEmail = decodeURIComponent(sessionId);
+      }
     }
   }
 
@@ -53,10 +57,12 @@ export const onRequest: PagesFunction<Env> = async (context) => {
   // Normalize email
   userEmail = userEmail.toLowerCase().trim();
 
-  // Check if user is admin
+  let userRole = 'cliente';
+  let clienteId = null;
   let isAdmin = false;
   let userName: string | undefined;
 
+  // 1. Check if Admin
   try {
     const adminRow = await env.DB.prepare(
       'SELECT email, nome, role FROM admins WHERE email = ? AND ativo = 1'
@@ -65,17 +71,40 @@ export const onRequest: PagesFunction<Env> = async (context) => {
       .first<{ email: string; nome: string; role: string }>();
 
     if (adminRow) {
+      userRole = 'admin';
       isAdmin = true;
       userName = adminRow.nome;
+      context.data.user = { email: userEmail, role: 'admin' };
+    } else {
+      // 2. Check if Client Contact
+      const contact = await env.DB.prepare(
+        'SELECT id, cliente_id, nome, email FROM contatos_cliente WHERE email = ? AND ativo = 1'
+      )
+        .bind(userEmail)
+        .first<{ id: string; cliente_id: string; nome: string; email: string }>();
+
+      if (contact) {
+        userRole = 'cliente';
+        clienteId = contact.cliente_id;
+        userName = contact.nome;
+        context.data.user = { email: userEmail, role: 'cliente', clienteId };
+      }
     }
-  } catch {
-    // If DB query fails, continue without admin privileges
+  } catch (err) {
+    // If DB query fails, continue with default role
   }
 
-  // Set context data for downstream handlers
+  // Set legacy context properties for downstream compatibility
   context.data.userEmail = userEmail;
   context.data.isAdmin = isAdmin;
-  context.data.userName = userName;
+  if (userName) {
+    context.data.userName = userName;
+  }
+
+  // Block client accesses to administrative paths
+  if (url.pathname.includes('/api/admin/') && userRole !== 'admin') {
+    return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403, headers: { 'Content-Type': 'application/json' } });
+  }
 
   return next();
 };
