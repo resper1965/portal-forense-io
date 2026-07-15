@@ -83,7 +83,8 @@ export const onRequestPost: PagesFunction<Env, string, UserContext> = async (con
 
     // Fetch project info
     const projeto = await env.DB.prepare(
-      `SELECT p.id, p.codigo, c.email AS cliente_email, c.nome AS cliente_nome
+      `SELECT p.id, p.codigo_proposta AS codigo, c.razao_social AS cliente_nome,
+              (SELECT email FROM contatos_cliente WHERE cliente_id = c.id AND ativo = 1 LIMIT 1) AS cliente_email
        FROM projetos p
        JOIN clientes c ON p.cliente_id = c.id
        WHERE p.id = ?`

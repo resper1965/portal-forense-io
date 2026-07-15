@@ -11,7 +11,9 @@ async function getEntregavelWithAccess(
   isAdmin: boolean
 ): Promise<{ allowed: boolean; entregavel: Record<string, unknown> | null; clienteEmail?: string }> {
   const entregavel = await env.DB.prepare(
-    `SELECT e.*, p.codigo AS projeto_codigo, c.email AS cliente_email, c.nome AS cliente_nome
+    `SELECT e.*, p.codigo_proposta AS projeto_codigo, p.cliente_id,
+            c.razao_social AS cliente_nome,
+            (SELECT email FROM contatos_cliente WHERE cliente_id = c.id AND ativo = 1 LIMIT 1) AS cliente_email
      FROM entregaveis e
      JOIN projetos p ON e.projeto_id = p.id
      JOIN clientes c ON p.cliente_id = c.id
@@ -28,14 +30,19 @@ async function getEntregavelWithAccess(
     return { allowed: true, entregavel, clienteEmail: entregavel.cliente_email as string };
   }
 
-  // Client: must match email AND entregável must be published
-  const emailMatch = (entregavel.cliente_email as string)?.toLowerCase() === userEmail.toLowerCase();
-  const isPublished = entregavel.publicado === 1;
+  // Client: must be an active contact of the project's client
+  const contact = await env.DB.prepare(
+    'SELECT id FROM contatos_cliente WHERE cliente_id = ? AND email = ? AND ativo = 1'
+  )
+    .bind(entregavel.cliente_id, userEmail)
+    .first();
+
+  const allowed = !!contact && entregavel.publicado === 1;
 
   return {
-    allowed: emailMatch && isPublished,
-    entregavel: emailMatch && isPublished ? entregavel : null,
-    clienteEmail: entregavel.cliente_email as string,
+    allowed,
+    entregavel: allowed ? entregavel : null,
+    clienteEmail: contact ? userEmail : undefined,
   };
 }
 
@@ -81,7 +88,8 @@ export const onRequestPut: PagesFunction<Env, string, UserContext> = async (cont
   try {
     // Fetch existing entregável with project info
     const existing = await env.DB.prepare(
-      `SELECT e.*, p.codigo AS projeto_codigo, c.email AS cliente_email, c.nome AS cliente_nome
+      `SELECT e.*, p.codigo_proposta AS projeto_codigo, c.razao_social AS cliente_nome,
+              (SELECT email FROM contatos_cliente WHERE cliente_id = c.id AND ativo = 1 LIMIT 1) AS cliente_email
        FROM entregaveis e
        JOIN projetos p ON e.projeto_id = p.id
        JOIN clientes c ON p.cliente_id = c.id

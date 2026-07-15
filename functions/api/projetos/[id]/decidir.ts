@@ -20,9 +20,8 @@ export const onRequestPost: PagesFunction<Env, string, UserContext> = async (con
 
     // 1. Fetch project with client info
     const projeto = await env.DB.prepare(
-      `SELECT p.*, c.email AS cliente_email
+      `SELECT p.id, p.codigo_proposta AS codigo, p.status, p.cliente_id
        FROM projetos p
-       JOIN clientes c ON p.cliente_id = c.id
        WHERE p.id = ?`
     )
       .bind(projetoId)
@@ -30,16 +29,22 @@ export const onRequestPost: PagesFunction<Env, string, UserContext> = async (con
         id: string;
         codigo: string;
         status: string;
-        cliente_email: string;
+        cliente_id: string;
       }>();
 
     if (!projeto) {
       return errorResponse('Proposta/Projeto não encontrado.', 404);
     }
 
-    // 2. Access control: only the client owner can decide
-    if (projeto.cliente_email?.toLowerCase() !== userEmail.toLowerCase()) {
-      return errorResponse('Acesso negado. Apenas o cliente proprietário pode responder a esta proposta.', 403);
+    // 2. Access control: only an active contact of the client owner can decide
+    const contact = await env.DB.prepare(
+      'SELECT id FROM contatos_cliente WHERE cliente_id = ? AND email = ? AND ativo = 1'
+    )
+      .bind(projeto.cliente_id, userEmail)
+      .first();
+
+    if (!contact) {
+      return errorResponse('Acesso negado. Apenas contatos ativos do cliente proprietário podem responder a esta proposta.', 403);
     }
 
     // 3. Status check: must currently be a proposal

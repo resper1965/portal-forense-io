@@ -44,10 +44,10 @@ export const onRequestPost: PagesFunction<Env, string, UserContext> = async (con
 
     // 2. Verify client has access to the project
     const projeto = await env.DB.prepare(
-      `SELECT p.id, p.codigo, c.email AS cliente_email
+      `SELECT p.id, p.codigo_proposta AS codigo, cc.email AS cliente_email
        FROM projetos p
-       JOIN clientes c ON p.cliente_id = c.id
-       WHERE p.id = ? AND c.email = ?`
+       JOIN contatos_cliente cc ON p.cliente_id = cc.cliente_id
+       WHERE p.id = ? AND cc.email = ? AND cc.ativo = 1`
     )
       .bind(body.projeto_id, userEmail)
       .first<{ id: string; codigo: string; cliente_email: string }>();
@@ -56,7 +56,7 @@ export const onRequestPost: PagesFunction<Env, string, UserContext> = async (con
     let projetoCodigo: string;
     if (!projeto) {
       if (data.isAdmin) {
-        const adminProjeto = await env.DB.prepare('SELECT id, codigo FROM projetos WHERE id = ?')
+        const adminProjeto = await env.DB.prepare('SELECT id, codigo_proposta AS codigo FROM projetos WHERE id = ?')
           .bind(body.projeto_id)
           .first<{ id: string; codigo: string }>();
 

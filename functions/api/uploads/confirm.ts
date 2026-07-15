@@ -24,7 +24,7 @@ export const onRequestPost: PagesFunction<Env, string, UserContext> = async (con
 
     // Fetch the upload record
     const upload = await env.DB.prepare(
-      `SELECT u.*, p.codigo AS projeto_codigo
+      `SELECT u.*, p.codigo_proposta AS projeto_codigo
        FROM uploads u
        JOIN projetos p ON u.projeto_id = p.id
        WHERE u.id = ?`

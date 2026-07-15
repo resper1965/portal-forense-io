@@ -46,7 +46,7 @@ export const onRequestGet: PagesFunction<Env, string, UserContext> = async (cont
 
       // Recent timeline entries (last 20)
       env.DB.prepare(
-        `SELECT t.*, p.codigo AS projeto_codigo, p.titulo AS projeto_titulo
+        `SELECT t.*, p.codigo_proposta AS projeto_codigo, p.titulo AS projeto_titulo
          FROM timeline t
          JOIN projetos p ON t.projeto_id = p.id
          ORDER BY t.created_at DESC LIMIT 20`
